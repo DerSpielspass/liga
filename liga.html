@@ -277,6 +277,20 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const TV = url.searchParams.get("tv")==="1";
+
+function updateTvContextLine(){
+  if(!TV) return;
+  try{
+    const sys = (systemSel && systemSel.value) ? systemSel.value : "";
+    const season = getSelectedSeason ? getSelectedSeason() : null;
+    const sname = (season && season.name) ? season.name : "";
+    if(subtitle){
+      const base = (subtitle.textContent||"Daten geladen.").split(" · ")[0];
+      subtitle.textContent = base + (sys ? " · "+sys : "") + (sname ? " · "+sname : "");
+    }
+  }catch(e){}
+}
+
 if(TV) document.documentElement.classList.add("tv");
 if(TV){
   // TV: standardmäßig Paarungen anzeigen
@@ -309,7 +323,7 @@ async function loadPublic(){
     standPill.textContent = "Stand: " + (lastUpdated ? parseTime(lastUpdated) : "—");
     renderLogo();
     buildSelectors();
-  updateTvContextLine();
+  if(typeof updateTvContextLine==="function") updateTvContextLine();
     renderCurrent();
     subtitle.textContent = "Daten geladen.";
     return true;
@@ -492,7 +506,7 @@ function renderCurrent(){
   if(TV){ viewSel.value = "round"; }
   if(TV){ viewSel.value = "round"; }
   setView(viewSel.value || "table");
-  updateTvContextLine();
+  if(typeof updateTvContextLine==="function") updateTvContextLine();
 
   if(season.type==="SWISS_SERIES"){
     const t = getSelectedTournament(season);
