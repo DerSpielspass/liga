@@ -209,6 +209,11 @@ let lastUpdated=null;
 const url=new URL(location.href);
 const TV = url.searchParams.get("tv")==="1";
 if(TV) document.documentElement.classList.add("tv");
+if(TV){
+  // TV: standardmäßig Paarungen anzeigen
+  try{ viewSel.value = "round"; }catch(e){}
+}
+
 
 if(TV){
   // Im TV-Modus wollen wir standardmäßig Paarungen anzeigen.
@@ -287,8 +292,39 @@ function buildSelectors(){
     viewSel.querySelector('option[value="seasonpoints"]').disabled = true;
     tournamentSel.innerHTML = `<option value="">(—)</option>`;
   }
+  // TV: automatisch aktuelles Turnier + offene Runde wählen
+  try{ chooseTvTournamentAndRound(getSelectedSeason()); }catch(e){}
   buildRoundSelector();
 }
+
+function chooseTvTournamentAndRound(season){
+  if(!TV || !season) return;
+  if(season.type==="SWISS_SERIES"){
+    const ts = (season.tournaments||[]);
+    if(!ts.length) return;
+    // bevorzugt ein Turnier mit offener Runde, sonst das neueste
+    let t = ts.find(x=>x.roundOpen) || ts[0];
+    if(tournamentSel && t){ tournamentSel.value = t.id; }
+    // bevorzugt offene Runde, sonst höchste vorhandene
+    if(roundSel){
+      const rounds = [].concat(t.roundsClosed||[]).concat(t.roundOpen?[t.roundOpen]:[]);
+      const openR = rounds.find(x=>x.status!=="CLOSED");
+      if(openR) roundSel.value = String(openR.no);
+      else if(rounds.length){
+        const maxNo = Math.max(...rounds.map(r=>r.no));
+        roundSel.value = String(maxNo);
+      }
+    }
+    // TV: nach dem Befüllen nochmal offene Runde erzwingen
+    try{ chooseTvTournamentAndRound(season); }catch(e){}
+  } else if(season.type==="RR"){
+    const rounds = (season.rounds||[]);
+    if(!rounds.length) return;
+    const open = rounds.find(r=>!r.confirmed) || rounds[0];
+    if(roundSel && open) roundSel.value = String(open.no);
+  }
+}
+
 function buildRoundSelector(){
   const season = getSelectedSeason();
   if(!season){ roundSel.innerHTML = `<option value="">(—)</option>`; return; }
@@ -306,6 +342,8 @@ function buildRoundSelector(){
       ? sorted.map(r=>`<option value="${r.no}">Runde ${r.no}${r.status==="CLOSED"?" ✓":""}</option>`).join("")
       : `<option value="">(keine Runde)</option>`;
     if(!roundSel.value && sorted[0]) roundSel.value = String(sorted[0].no);
+    // TV: nach dem Befüllen nochmal offene Runde erzwingen
+    try{ chooseTvTournamentAndRound(season); }catch(e){}
   } else if(season.type==="RR"){
     const rounds = (season.rounds||[]).slice().sort((a,b)=>a.no-b.no);
     roundSel.innerHTML = rounds.length
@@ -373,6 +411,7 @@ function renderCurrent(){
     return;
   }
   subtitle.textContent = `${sys} · ${season.name}`;
+  if(TV){ viewSel.value = "round"; }
   if(TV){ viewSel.value = "round"; }
   setView(viewSel.value || "table");
 
