@@ -277,6 +277,30 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const TV = url.searchParams.get("tv")==="1";
+
+function applyUrlSelection(){
+  try{
+    const url = new URL(location.href);
+    const sysP = url.searchParams.get("sys");
+    const seasonP = url.searchParams.get("season");
+    if(sysP && systemSel){
+      const s = sysP.toUpperCase();
+      // only apply if option exists
+      const ok = Array.from(systemSel.options||[]).some(o => o.value===s);
+      if(ok) systemSel.value = s;
+    }
+    // rebuilding season options after system change
+    if(typeof buildSeasonSelector==="function") buildSeasonSelector();
+    if(seasonP && seasonSel){
+      const wanted = seasonP;
+      const opt = Array.from(seasonSel.options||[]).find(o => (o.textContent||"").trim()===wanted);
+      if(opt) seasonSel.value = opt.value;
+    } else if(seasonSel && seasonSel.options && seasonSel.options.length){
+      seasonSel.selectedIndex = 0;
+    }
+  }catch(e){}
+}
+
 if(TV) document.documentElement.classList.add("tv");
 if(TV){
   // TV: standardmäßig Paarungen anzeigen
@@ -309,7 +333,9 @@ async function loadPublic(){
     standPill.textContent = "Stand: " + (lastUpdated ? parseTime(lastUpdated) : "—");
     renderLogo();
     buildSelectors();
-    renderCurrent();
+  applyUrlSelection();
+    applyUrlSelection();
+  renderCurrent();
     subtitle.textContent = "Daten geladen.";
     return true;
   }catch(err){
@@ -645,8 +671,10 @@ function countTournaments(season,id){
 }
 
 /* events */
-systemSel.addEventListener("change", ()=>{ buildSelectors(); renderCurrent(); });
-seasonSel.addEventListener("change", ()=>{ buildSelectors(); renderCurrent(); });
+systemSel.addEventListener("change", ()=>{ buildSelectors();
+  applyUrlSelection(); renderCurrent(); });
+seasonSel.addEventListener("change", ()=>{ buildSelectors();
+  applyUrlSelection(); renderCurrent(); });
 tournamentSel.addEventListener("change", ()=>{ buildRoundSelector(); renderCurrent(); });
 roundSel.addEventListener("change", renderCurrent);
 viewSel.addEventListener("change", ()=>{ setView(viewSel.value); renderCurrent(); });
@@ -665,7 +693,8 @@ async function tick(){
         if(j?.lastUpdated && j.lastUpdated !== lastUpdated){
           pub=j; lastUpdated=j.lastUpdated;
           standPill.textContent = "Stand: " + parseTime(lastUpdated);
-          renderLogo(); buildSelectors(); renderCurrent();
+          renderLogo(); buildSelectors();
+  applyUrlSelection(); renderCurrent();
         } else if(j?.lastUpdated){
           standPill.textContent = "Stand: " + parseTime(j.lastUpdated);
         }
