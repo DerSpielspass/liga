@@ -1,267 +1,1530 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Liga Admin (v3)</title>
-<style>
-  body{font-family:system-ui,Arial;margin:20px;background:#0f1220;color:#e9ecff}
-  h1{margin:0 0 14px}
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
-  .card{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);padding:12px;border-radius:12px;margin:12px 0}
-  label{display:block;font-size:12px;opacity:.8;margin:0 0 6px}
-  input,select,button{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e9ecff}
-  button{cursor:pointer;font-weight:650}
-  button:hover{background:rgba(255,255,255,.10)}
-  .muted{opacity:.75;font-size:12px}
-  ul{margin:8px 0 0;padding-left:18px}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{border-bottom:1px solid rgba(255,255,255,.12);padding:8px;text-align:left}
-  th{opacity:.8;font-size:12px}
-  .right{text-align:right}
-  .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-size:12px;opacity:.9}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Liga Admin v4 (PKM / YGO / DT)</title>
+  <style>
+    :root{--bg:#0b1220;--card:#121b2e;--text:#e8eefc;--muted:#a9b7da;--acc:#7aa2ff;--good:#2fe3a6;--bad:#ff6b6b;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;background:linear-gradient(180deg,#070b14,var(--bg));color:var(--text)}
+    header{position:sticky;top:0;z-index:10;background:rgba(7,11,20,.78);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.08);padding:14px 16px}
+    main{max-width:1300px;margin:0 auto;padding:16px 16px 60px;display:grid;gap:14px}
+    .card{background:rgba(18,27,46,.92);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .split{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+    h1{margin:0;font-size:18px}
+    h2{margin:0 0 10px;font-size:15px}
+    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+    input,select,button,textarea{border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--text);padding:10px;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:rgba(122,162,255,.6);box-shadow:0 0 0 3px rgba(122,162,255,.15)}
+    button{cursor:pointer;border-color:rgba(122,162,255,.35);background:rgba(122,162,255,.18);font-weight:650}
+    button:hover{background:rgba(122,162,255,.26)}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    .btn-good{border-color:rgba(47,227,166,.35);background:rgba(47,227,166,.14)}
+    .btn-good:hover{background:rgba(47,227,166,.22)}
+    .btn-bad{border-color:rgba(255,107,107,.35);background:rgba(255,107,107,.14)}
+    .btn-bad:hover{background:rgba(255,107,107,.22)}
+    .muted{color:var(--muted)}
+    .pill{display:inline-flex;gap:6px;align-items:center;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.12);color:var(--muted)}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);cursor:pointer;font-size:13px}
+    .tab.active{border-color:rgba(122,162,255,.5);background:rgba(122,162,255,.14)}
+    .hide{display:none !important}
+    .list{display:grid;gap:8px}
+    .item{display:flex;justify-content:space-between;gap:10px;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+    .item b{font-size:13px}
+    .item .meta{color:var(--muted);font-size:12px;margin-top:3px}
+    table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden}
+    th,td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;text-align:left;vertical-align:top}
+    th{color:var(--muted);font-weight:650}
+    .right{text-align:right}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .small{font-size:12px}
+    .kpi{display:flex;gap:8px;flex-wrap:wrap}
+    .badge{padding:2px 6px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px;color:var(--muted)}
+    .logoBox{width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);display:grid;place-items:center;overflow:hidden}
+    .logoBox img{width:100%;height:100%;object-fit:cover;display:block}
+  </style>
 </head>
 <body>
-<h1>🛠️ Liga Admin (v3) – PKM / YGO / DT</h1>
-<div class="muted">Diese Version zeigt dir sichtbar, wenn eine Saison angelegt wurde. Veröffentlichung erzeugt <b>public.json</b> für die Anzeige.</div>
-
-<div class="card">
-  <div class="row">
-    <div>
-      <label>System</label>
-      <select id="sys">
-        <option value="PKM">PKM</option>
-        <option value="YGO">YGO</option>
-        <option value="DT">DT</option>
-      </select>
+<header>
+  <div class="split">
+    <div class="row" style="align-items:center;">
+      <div class="logoBox" title="Logo (Frontend)">
+        <img id="logoImg" class="hide" alt="Logo" />
+        <div id="logoPh" class="muted small">Logo</div>
+      </div>
+      <div>
+        <h1>🛠️ Liga Admin v4</h1>
+        <div class="muted small">PKM/YGO: Saison = Turnierserie (Swiss) · DT: Saison = Round Robin</div>
+      </div>
     </div>
-    <div style="min-width:260px;flex:1">
-      <label>Saisonname</label>
-      <input id="seasonName" placeholder="z. B. PKM Frühjahr 2026"/>
+    <div class="row">
+      <span class="pill" id="authPill">Status: gesperrt</span>
+      <button id="authBtn">Admin öffnen</button>
     </div>
-    <button id="createSeason">Neue Saison anlegen/ersetzen</button>
-    <button id="toggleBonus">Teilnahmebonus: Aus</button>
-    <button id="publish">Veröffentlichen (public.json)</button>
   </div>
-  <div style="margin-top:8px" class="row">
-    <span class="pill" id="seasonStatus">Keine Saison gewählt</span>
-    <span class="pill" id="lastSaved">—</span>
-  </div>
-</div>
+</header>
 
-<div class="card">
-  <h3>Nicknames</h3>
-  <div class="row">
-    <div style="min-width:260px;flex:1">
-      <label>Nickname</label>
-      <input id="nick" placeholder="Nickname (öffentlich)"/>
+<main>
+  <div class="card">
+    <div class="split">
+      <div>
+        <h2>System & Saison</h2>
+        <div class="muted small">Ergebnisse werden erst nach <b>Rundenabschluss</b> sichtbar. Saisonpunkte (Swiss) werden beim <b>Turnierabschluss</b> berechnet. Abkürzungen: PKM, YGO, DT.</div>
+        <div class="kpi" id="kpiRow" style="margin-top:8px;"></div>
+      </div>
+      <div class="row" id="topAdminBtns">
+        <button id="publishBtn" class="btn-good">Veröffentlichen (public.json)</button>
+        <button id="downloadArchiveBtn">Archiv laden (archive.json)</button>
+        <button id="downloadStateBtn">Backup laden (admin_state.json)</button>
+        <button id="importStateBtn">Backup importieren</button>
+        <button id="resetBtn" class="btn-bad">Alles zurücksetzen</button>
+      </div>
     </div>
-    <button id="addNick">Hinzufügen</button>
-  </div>
-  <ul id="nickList"></ul>
-</div>
 
-<div class="card">
-  <h3>Swiss-Turniere (PKM/YGO)</h3>
-  <div class="muted">In dieser v3-Demo gibt es noch keine Paarungen/Runden – nur Turnierabschluss → Saisonpunkte (Teilnehmer-Faktor) + optional Teilnahmebonus.</div>
-  <div class="row" style="margin-top:10px">
-    <button id="startT">Turnier starten (alle Nicknames als Teilnehmer)</button>
-    <button id="closeT">Turnier abschließen (Saisonpunkte berechnen)</button>
+    <div class="row" style="margin-top:12px;">
+      <div style="width:180px;">
+        <label>System</label>
+        <select id="systemSel">
+          <option value="PKM">PKM</option>
+          <option value="YGO">YGO</option>
+          <option value="DT">DT</option>
+        </select>
+      </div>
+      <div style="min-width:260px;flex:1;">
+        <label>Aktive Saison</label>
+        <select id="seasonSel"></select>
+      </div>
+      <div style="width:240px;">
+        <label>Teilnahmebonus (Swiss)</label>
+        <select id="attendanceBonusSel">
+          <option value="OFF">Aus</option>
+          <option value="ON">An (+1.0 pro Turnier)</option>
+        </select>
+      </div>
+      <div style="width:210px;">
+        <label>Wertung</label>
+        <span class="pill" id="scoringPill">3/1/0</span>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <div style="min-width:260px;flex:1;">
+        <label>Neue Saisonname</label>
+        <input id="newSeasonName" placeholder="z. B. PKM Frühjahr 2026" />
+      </div>
+      <button id="createSeasonBtn" class="btn-good">Saison anlegen</button>
+      <button id="endSeasonBtn" class="btn-bad">Saison beenden (Archiv)</button>
+    </div>
   </div>
-  <div id="tStatus" class="muted" style="margin-top:8px">—</div>
-  <div style="overflow:auto">
-    <table>
-      <thead><tr><th>#</th><th>Nickname</th><th class="right">Turniere</th><th class="right">Saisonpkt</th></tr></thead>
-      <tbody id="spBody"></tbody>
-    </table>
+
+  <div class="card">
+    <div class="tabs">
+      <div class="tab active" data-tab="teams">Nicknames</div>
+      <div class="tab" data-tab="swiss">Swiss (PKM/YGO)</div>
+      <div class="tab" data-tab="rr">Round Robin (DT)</div>
+      <div class="tab" data-tab="logo">Logo</div>
+      <div class="tab" data-tab="help">Hilfe</div>
+    </div>
+
+    <!-- TEAMS -->
+    <div id="tab_teams" style="margin-top:12px;">
+      <div class="split">
+        <div>
+          <h2>Nicknames</h2>
+          <div class="muted small">Öffentlich sichtbar → bitte nur Nicknames eintragen.</div>
+        </div>
+        <div class="row">
+          <div style="min-width:260px;flex:1;">
+            <label>Nickname hinzufügen</label>
+            <input id="teamName" placeholder="Nickname" />
+          </div>
+          <button id="addTeamBtn" class="btn-good">Hinzufügen</button>
+        </div>
+      </div>
+      <div class="list" id="teamList" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- SWISS -->
+    <div id="tab_swiss" class="hide" style="margin-top:12px;">
+      <div class="split">
+        <div>
+          <h2>Swiss Turnierserie</h2>
+          <div class="muted small">Pro Abend ein Turnier. Runden erzeugen: Swiss-Pairing (nach Punkten, möglichst ohne Rematch). BYE bei ungerader Teilnehmerzahl.</div>
+        </div>
+        <div class="row">
+          <button id="newTournamentBtn" class="btn-good">Neues Turnier starten</button>
+          <button id="closeTournamentBtn" class="btn-bad">Turnier abschließen</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div style="min-width:260px;flex:1;">
+          <label>Aktives Turnier</label>
+          <select id="tournamentSel"></select>
+        </div>
+        <div style="width:220px;">
+          <label>Teilnehmer</label>
+          <span class="pill" id="tournamentNPill">0</span>
+        </div>
+        <div style="width:260px;">
+          <label>Status</label>
+          <span class="pill" id="tournamentStatusPill">—</span>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:12px;">
+        <div class="card" style="margin:0;">
+          <h2>Teilnehmer verwalten</h2>
+          <div class="muted small">Wähle aus den Nicknames die Teilnehmer dieses Turniers.</div>
+          <div class="row" style="margin-top:10px;">
+            <div style="min-width:240px;flex:1;">
+              <label>Nickname</label>
+              <select id="tAddPlayerSel"></select>
+            </div>
+            <button id="tAddPlayerBtn" class="btn-good">Hinzufügen</button>
+          </div>
+          <div class="list" id="tPlayerList" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="card" style="margin:0;">
+          <h2>Runden & Ergebnisse</h2>
+          <div class="muted small">Workflow: Runde generieren → Ergebnisse eintragen → Runde abschließen.</div>
+
+          <div class="row" style="margin-top:10px;">
+            <button id="genSwissRoundBtn" class="btn-good">Nächste Runde generieren</button>
+            <div style="min-width:180px;">
+              <label>Runde wählen</label>
+              <select id="roundSel"></select>
+            </div>
+            <button id="loadRoundBtn">Laden</button>
+            <button id="closeRoundBtn" class="btn-bad">Runde abschließen</button>
+          </div>
+
+          <div class="muted small" style="margin-top:8px;">Resultat: Normal (Scores), Unentschieden möglich. Oder <b>Doppelte Niederlage</b> (beide 0 Punkte).</div>
+
+          <div id="roundEditor" class="hide" style="margin-top:10px;">
+            <div class="list" id="roundMatchList"></div>
+            <div class="row" style="margin-top:10px;">
+              <button id="saveRoundBtn" class="btn-good">Speichern</button>
+            </div>
+            <div class="muted small" id="roundHint" style="margin-top:6px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <h2>Turnier-Tabelle (live)</h2>
+        <div class="muted small">Berechnet aus abgeschlossenen Runden (Tiebreaker: Pkt → OppPkt → OppOppPkt → Name).</div>
+        <div style="overflow:auto;margin-top:10px;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Nickname</th>
+                <th class="right">Sp</th><th class="right">S</th><th class="right">U</th><th class="right">N</th>
+                <th class="right">Pkt</th>
+                <th class="right">OppPkt</th>
+                <th class="right">OppOppPkt</th>
+              </tr>
+            </thead>
+            <tbody id="swissStandingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <h2>Saisonwertung (Swiss)</h2>
+        <div class="muted small">Saisonpunkte pro Turnier: Leistung × 10 × sqrt(N/8) + optional Teilnahmebonus. 1 Nachkommastelle.</div>
+        <div style="overflow:auto;margin-top:10px;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Nickname</th>
+                <th class="right">Turniere</th>
+                <th class="right">Saisonpkt</th>
+              </tr>
+            </thead>
+            <tbody id="seasonSwissBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RR -->
+    <div id="tab_rr" class="hide" style="margin-top:12px;">
+      <div class="split">
+        <div>
+          <h2>Round Robin Saison (DT)</h2>
+          <div class="muted small">In v4 bleibt DT simpel: Spielplan erzeugen → Ergebnisse eintragen → Spieltag bestätigen (erst dann wird veröffentlicht).</div>
+        </div>
+        <div class="row">
+          <button id="genRRBtn" class="btn-good">Spielplan erzeugen</button>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div style="min-width:240px;flex:1;">
+          <label>Spieltag</label>
+          <select id="rrRoundSel"></select>
+        </div>
+        <button id="loadRRRoundBtn">Laden</button>
+        <button id="confirmRRRoundBtn" class="btn-bad">Spieltag bestätigen</button>
+      </div>
+
+      <div id="rrEditor" class="hide" style="margin-top:10px;">
+        <div class="list" id="rrMatchList"></div>
+        <div class="row" style="margin-top:10px;">
+          <button id="saveRRBtn" class="btn-good">Speichern</button>
+        </div>
+        <div class="muted small" id="rrHint" style="margin-top:6px;"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <h2>DT Tabelle (Saison)</h2>
+        <div style="overflow:auto;margin-top:10px;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Nickname</th>
+                <th class="right">Sp</th><th class="right">S</th><th class="right">U</th><th class="right">N</th>
+                <th class="right">Pkt</th>
+                <th class="right">OppPkt</th>
+                <th class="right">OppOppPkt</th>
+              </tr>
+            </thead>
+            <tbody id="rrStandingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGO -->
+    <div id="tab_logo" class="hide" style="margin-top:12px;">
+      <h2>Logo</h2>
+      <div class="muted small">Das Logo wird beim Veröffentlichen in public.json übernommen.</div>
+      <div class="row" style="margin-top:10px;">
+        <button id="logoUploadBtn" class="btn-good">Logo hochladen</button>
+        <button id="logoRemoveBtn" class="btn-bad">Logo entfernen</button>
+        <input id="logoFile" class="hide" type="file" accept="image/*" />
+      </div>
+      <div class="muted small" style="margin-top:10px;">Tipp: Quadratisches Logo (z. B. 512×512) sieht am besten aus.</div>
+    </div>
+
+    <!-- HELP -->
+    <div id="tab_help" class="hide" style="margin-top:12px;">
+      <h2>Hilfe</h2>
+      <div class="muted small">
+        <p><b>Swiss (PKM/YGO):</b> Saison anlegen → Turnier starten → Teilnehmer hinzufügen → Runde generieren → Scores eintragen / Doppelte Niederlage → Runde abschließen → am Ende Turnier abschließen (Saisonpunkte) → <b>Veröffentlichen</b>.</p>
+        <p><b>DT:</b> Saison anlegen → Nicknames → im Nicknames-Tab „In Saison“ aktivieren → Spielplan erzeugen → Spieltag eingeben → Spieltag bestätigen → <b>Veröffentlichen</b>.</p>
+        <p><b>GitHub Pages:</b> Nach „Veröffentlichen“ die neue <span class="mono">public.json</span> im Repo ersetzen und committen.</p>
+      </div>
+    </div>
   </div>
-</div>
+</main>
 
 <script>
-const KEY="liga_admin_v3";
-const SCORE={win:3,draw:1,loss:0};
+/* Liga Admin v4
+   - Pro System 1 aktive Saison (im UI auswählbar)
+   - PKM/YGO: Swiss-Turnierserie
+   - DT: Round Robin
+   - Publish: public.json + archive.json als Download
+*/
+const STORAGE_KEY = "liga_admin_v4";
+const SYSTEMS = ["PKM","YGO","DT"];
+const SCORE = { win:3, draw:1, loss:0 };
 
-let state = JSON.parse(localStorage.getItem(KEY)||"null") || {
-  teams:[],
-  seasons:{
-    PKM:null, YGO:null, DT:null
-  },
-  settings:{ attendanceBonus:{PKM:false,YGO:false,DT:false} },
-  ui:{ sys:"PKM" }
+const $ = (id)=>document.getElementById(id);
+const esc = (s)=>String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+const uid = ()=> (Math.random().toString(16).slice(2) + Date.now().toString(16));
+const clampInt = (v,min,max)=>{ const n=parseInt(v,10); if(Number.isNaN(n)) return min; return Math.max(min, Math.min(max,n)); };
+const round1 = (x)=> Math.round(x*10)/10;
+
+let isAdmin = false;
+
+const state = load() ?? seedEmpty();
+
+/* UI refs */
+const authPill = $("authPill");
+const authBtn = $("authBtn");
+const topAdminBtns = $("topAdminBtns");
+const publishBtn = $("publishBtn");
+const downloadArchiveBtn = $("downloadArchiveBtn");
+const downloadStateBtn = $("downloadStateBtn");
+const importStateBtn = $("importStateBtn");
+const resetBtn = $("resetBtn");
+
+const systemSel = $("systemSel");
+const seasonSel = $("seasonSel");
+const attendanceBonusSel = $("attendanceBonusSel");
+const scoringPill = $("scoringPill");
+const newSeasonName = $("newSeasonName");
+const createSeasonBtn = $("createSeasonBtn");
+const endSeasonBtn = $("endSeasonBtn");
+
+const kpiRow = $("kpiRow");
+
+const teamName = $("teamName");
+const addTeamBtn = $("addTeamBtn");
+const teamList = $("teamList");
+
+const newTournamentBtn = $("newTournamentBtn");
+const closeTournamentBtn = $("closeTournamentBtn");
+const tournamentSel = $("tournamentSel");
+const tournamentNPill = $("tournamentNPill");
+const tournamentStatusPill = $("tournamentStatusPill");
+const tAddPlayerSel = $("tAddPlayerSel");
+const tAddPlayerBtn = $("tAddPlayerBtn");
+const tPlayerList = $("tPlayerList");
+const genSwissRoundBtn = $("genSwissRoundBtn");
+const roundSel = $("roundSel");
+const loadRoundBtn = $("loadRoundBtn");
+const closeRoundBtn = $("closeRoundBtn");
+const saveRoundBtn = $("saveRoundBtn");
+const roundEditor = $("roundEditor");
+const roundMatchList = $("roundMatchList");
+const roundHint = $("roundHint");
+const seasonSwissBody = $("seasonSwissBody");
+const swissStandingsBody = $("swissStandingsBody");
+
+const genRRBtn = $("genRRBtn");
+const rrRoundSel = $("rrRoundSel");
+const loadRRRoundBtn = $("loadRRRoundBtn");
+const confirmRRRoundBtn = $("confirmRRRoundBtn");
+const rrEditor = $("rrEditor");
+const rrMatchList = $("rrMatchList");
+const saveRRBtn = $("saveRRBtn");
+const rrHint = $("rrHint");
+const rrStandingsBody = $("rrStandingsBody");
+
+const logoImg = $("logoImg");
+const logoPh = $("logoPh");
+const logoUploadBtn = $("logoUploadBtn");
+const logoRemoveBtn = $("logoRemoveBtn");
+const logoFile = $("logoFile");
+
+/* Tabs */
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    const name = t.dataset.tab;
+    ["teams","swiss","rr","logo","help"].forEach(n=>{
+      $("tab_"+n).classList.toggle("hide", n!==name);
+    });
+    renderAll();
+  });
+});
+
+/* Auth (PIN) */
+authBtn.addEventListener("click", async ()=>{
+  if(isAdmin){ isAdmin=false; renderAll(); return; }
+  if(!state.adminPinHash){
+    const pin = prompt("Noch kein Admin-PIN gesetzt.\nBitte neuen PIN setzen (mind. 4 Zeichen):");
+    if(!pin || pin.trim().length<4) return;
+    state.adminPinHash = await hash(pin.trim());
+    persist();
+    alert("PIN gesetzt. Du bist jetzt im Admin-Modus.");
+    isAdmin=true; renderAll(); return;
+  }
+  const pin = prompt("Admin-PIN eingeben:");
+  if(!pin) return;
+  const ok = (await hash(pin.trim())) === state.adminPinHash;
+  if(!ok){ alert("PIN falsch."); return; }
+  isAdmin=true; renderAll();
+});
+
+/* Top buttons */
+publishBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const pub = buildPublicSnapshot();
+  downloadJson("public.json", pub);
+  downloadJson("archive.json", state.archive);
+  alert("public.json (und archive.json) wurden erstellt.\nBitte public.json im GitHub-Repo ersetzen und committen.");
+});
+downloadArchiveBtn.addEventListener("click", ()=> downloadJson("archive.json", state.archive));
+downloadStateBtn.addEventListener("click", ()=> downloadJson("admin_state.json", state));
+importStateBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const raw = prompt("Backup JSON einfügen (admin_state.json Inhalt):");
+  if(!raw) return;
+  try{
+    const parsed = JSON.parse(raw);
+    sanitizeAndApply(parsed);
+    persist(); renderAll();
+    alert("Import erfolgreich.");
+  }catch{ alert("Konnte JSON nicht importieren."); }
+});
+resetBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  if(!confirm("Wirklich alles löschen?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+});
+
+/* System/Season selectors */
+systemSel.addEventListener("change", ()=>{
+  state.ui.activeSystem = systemSel.value;
+  state.ui.activeSeasonIdBySystem[state.ui.activeSystem] = firstSeasonId(state.ui.activeSystem) ?? null;
+  persist(); renderAll();
+});
+seasonSel.addEventListener("change", ()=>{
+  state.ui.activeSeasonIdBySystem[activeSystem()] = seasonSel.value || null;
+  persist(); renderAll();
+});
+attendanceBonusSel.addEventListener("change", ()=>{
+  requireAdmin();
+  const s = activeSeason();
+  if(!s || s.type!=="SWISS_SERIES"){ alert("Teilnahmebonus nur für Swiss-Saisons."); return; }
+  s.settings.attendanceBonus = (attendanceBonusSel.value==="ON");
+  persist(); renderAll();
+});
+
+/* Season create/end */
+createSeasonBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const sys = activeSystem();
+  const name = newSeasonName.value.trim();
+  if(!name) return;
+  const id = uid();
+  const season = {
+    id, system: sys, name: name.slice(0,80),
+    createdAt: Date.now(), endedAt: null,
+    type: (sys==="DT" ? "RR" : "SWISS_SERIES"),
+    settings: {
+      scoring: { ...SCORE },
+      attendanceBonus: false,
+      seasonPoints: { base: 10, divisorN: 8, exponent: 0.5, rounding: 1 }
+    },
+    roster: [], // season participants (mainly DT)
+    // Swiss series:
+    tournaments: [],
+    seasonPointsByTeamId: {},
+    // RR:
+    rr: { rounds: [] }
+  };
+  state.seasons.push(season);
+  state.ui.activeSeasonIdBySystem[sys] = id;
+  newSeasonName.value = "";
+  persist(); renderAll();
+});
+endSeasonBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const s = activeSeason();
+  if(!s) return;
+  if(!confirm("Saison wirklich beenden? Sie wird ins Archiv verschoben.")) return;
+  s.endedAt = Date.now();
+  state.archive.seasons.push(structuredClone(s));
+  state.seasons = state.seasons.filter(x=>x.id!==s.id);
+  state.ui.activeSeasonIdBySystem[s.system] = firstSeasonId(s.system) ?? null;
+  persist(); renderAll();
+  alert("Saison archiviert.");
+});
+
+/* Teams (global) */
+addTeamBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const name = teamName.value.trim();
+  if(!name) return;
+  if(state.teams.some(t=>t.name.toLowerCase()===name.toLowerCase())){
+    alert("Diesen Nickname gibt es schon.");
+    return;
+  }
+  state.teams.push({ id: uid(), name: name.slice(0,80), createdAt: Date.now() });
+  teamName.value="";
+  persist(); renderAll();
+});
+window.deleteTeam = (id)=>{
+  requireAdmin();
+  const used = state.seasons.some(s=>{
+    if(s.type==="RR"){
+      if((s.roster||[]).includes(id)) return true;
+      return (s.rr.rounds||[]).some(r=>r.matches.some(m=>m.aId===id||m.bId===id));
+    }
+    return (s.tournaments||[]).some(t=>t.players.includes(id) || t.rounds.some(r=>r.matches.some(m=>m.aId===id||m.bId===id)));
+  });
+  if(used){ alert("Nickname wird in einer Saison/Turnier genutzt und kann nicht gelöscht werden."); return; }
+  state.teams = state.teams.filter(t=>t.id!==id);
+  persist(); renderAll();
+};
+window.toggleRoster = (id)=>{
+  requireAdmin();
+  const s = activeSeason();
+  if(!s) return;
+  if(s.type!=="RR"){ alert("Roster wird v.a. für DT genutzt."); return; }
+  const idx = s.roster.indexOf(id);
+  if(idx>=0) s.roster.splice(idx,1);
+  else s.roster.push(id);
+  persist(); renderAll();
 };
 
-const $=id=>document.getElementById(id);
-const nowIso=()=>new Date().toISOString();
-const round1=x=>Math.round(x*10)/10;
+/* Logo */
+logoUploadBtn.addEventListener("click", ()=>{ requireAdmin(); logoFile.value=""; logoFile.click(); });
+logoFile.addEventListener("change", async ()=>{
+  requireAdmin();
+  const f = logoFile.files?.[0];
+  if(!f) return;
+  const dataUrl = await fileToDataUrl(f);
+  state.logoDataUrl = dataUrl;
+  persist(); renderAll();
+});
+logoRemoveBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  if(!confirm("Logo entfernen?")) return;
+  state.logoDataUrl = null;
+  persist(); renderAll();
+});
 
-function save(){
-  state._lastSaved = nowIso();
-  localStorage.setItem(KEY, JSON.stringify(state));
-  render();
+/* Swiss series */
+newTournamentBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const s = activeSeason();
+  if(!s || s.type!=="SWISS_SERIES"){ alert("Swiss Turniere nur in PKM/YGO Saison."); return; }
+  const number = s.tournaments.length + 1;
+  const dateStr = new Date().toISOString().slice(0,10);
+  const t = {
+    id: uid(),
+    name: `#${number} – ${dateStr}`,
+    createdAt: Date.now(),
+    closedAt: null,
+    status: "OPEN",
+    players: [],
+    rounds: [], // {no,status,matches:[]}
+    seasonPointsByTeamId: {}
+  };
+  s.tournaments.unshift(t);
+  s.activeTournamentId = t.id;
+  persist(); renderAll();
+});
+tournamentSel.addEventListener("change", ()=>{
+  const s = activeSeason();
+  if(!s || s.type!=="SWISS_SERIES") return;
+  s.activeTournamentId = tournamentSel.value || null;
+  persist(); renderAll();
+});
+tAddPlayerBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const t = activeTournament();
+  if(!t) return alert("Kein Turnier.");
+  if(t.status!=="OPEN") return alert("Turnier ist abgeschlossen.");
+  const id = tAddPlayerSel.value;
+  if(!id) return;
+  if(t.players.includes(id)) return;
+  t.players.push(id);
+  persist(); renderAll();
+});
+window.removeTournamentPlayer = (id)=>{
+  requireAdmin();
+  const t = activeTournament();
+  if(!t) return;
+  if(t.status!=="OPEN") return alert("Turnier ist abgeschlossen.");
+  const used = t.rounds.some(r=>r.matches.some(m=>m.aId===id||m.bId===id));
+  if(used) return alert("Spieler ist bereits in Paarungen. Entfernen nicht möglich.");
+  t.players = t.players.filter(x=>x!==id);
+  persist(); renderAll();
+};
+
+genSwissRoundBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const s = activeSeason();
+  const t = activeTournament();
+  if(!s || !t) return alert("Keine Swiss Saison / kein Turnier.");
+  if(t.status!=="OPEN") return alert("Turnier ist abgeschlossen.");
+  if(t.players.length < 2) return alert("Mindestens 2 Teilnehmer.");
+
+  // last round must be closed
+  const last = t.rounds[0];
+  if(last && last.status!=="CLOSED"){
+    alert("Bitte zuerst die aktuelle Runde abschließen.");
+    return;
+  }
+
+  const nextNo = (t.rounds.length ? Math.max(...t.rounds.map(r=>r.no)) + 1 : 1);
+  const pairings = buildSwissPairings(t.players, t.rounds, s.settings.scoring);
+
+  const matches = [];
+  let tableNo = 1;
+  for(const p of pairings){
+    if(p.type==="BYE"){
+      matches.push({
+        id: uid(),
+        aId: p.playerId,
+        bId: null,
+        tableNo: null,
+        resultType: "BYE",
+        aScore: 1, bScore: 0,
+        note: "BYE",
+        decided: true
+      });
+    } else {
+      matches.push({
+        id: uid(),
+        aId: p.aId, bId: p.bId,
+        tableNo: tableNo++,
+        resultType: "NORMAL",
+        aScore: null, bScore: null,
+        note: "",
+        decided: false
+      });
+    }
+  }
+  t.rounds.unshift({ no: nextNo, status: "OPEN", createdAt: Date.now(), matches });
+  persist(); renderAll();
+  alert("Runde " + nextNo + " erzeugt.");
+});
+
+loadRoundBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const t = activeTournament();
+  if(!t) return;
+  const rno = parseInt(roundSel.value,10);
+  if(!rno) return;
+  renderSwissRoundEditor(rno);
+});
+saveRoundBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const t = activeTournament();
+  if(!t) return;
+  const rno = parseInt(roundSel.value,10);
+  if(!rno) return;
+  const r = t.rounds.find(x=>x.no===rno);
+  if(!r) return;
+  applyRoundInputs(r);
+  persist(); renderAll();
+  renderSwissRoundEditor(rno);
+  alert("Runde gespeichert.");
+});
+closeRoundBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const t = activeTournament();
+  if(!t) return;
+  const rno = parseInt(roundSel.value,10);
+  if(!rno) return;
+  const r = t.rounds.find(x=>x.no===rno);
+  if(!r) return;
+  applyRoundInputs(r);
+
+  const open = r.matches.filter(m=>m.bId!==null).some(m=>!isMatchDecided(m));
+  if(open) return alert("Bitte alle Spiele entscheiden (Scores oder Doppelte Niederlage).");
+  r.status = "CLOSED";
+  persist(); renderAll();
+  renderSwissRoundEditor(rno);
+  alert("Runde " + rno + " abgeschlossen.");
+});
+
+closeTournamentBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const s = activeSeason();
+  const t = activeTournament();
+  if(!s || !t) return;
+  if(t.status!=="OPEN") return alert("Turnier ist bereits abgeschlossen.");
+  if(t.players.length < 2) return alert("Mindestens 2 Teilnehmer.");
+
+  const openRound = t.rounds.find(r=>r.status!=="CLOSED");
+  if(openRound) return alert("Es gibt noch eine offene Runde. Bitte zuerst abschließen.");
+
+  // compute season points for this tournament
+  const perf = computeTournamentPerformance(t, s.settings.scoring);
+  const N = t.players.length;
+  const factor = Math.pow(N / s.settings.seasonPoints.divisorN, s.settings.seasonPoints.exponent);
+  const base = s.settings.seasonPoints.base;
+
+  t.seasonPointsByTeamId = {};
+  for(const pid of t.players){
+    const p = perf[pid] || { matchPoints:0, roundsPlayed:0 };
+    const denom = Math.max(1, (s.settings.scoring.win * Math.max(1, p.roundsPlayed)));
+    const leistung = p.matchPoints / denom; // 0..1
+    let sp = leistung * base * factor;
+    if(s.settings.attendanceBonus) sp += 1.0;
+    sp = round1(sp);
+    t.seasonPointsByTeamId[pid] = sp;
+    s.seasonPointsByTeamId[pid] = round1((s.seasonPointsByTeamId[pid] || 0) + sp);
+  }
+  t.status = "CLOSED";
+  t.closedAt = Date.now();
+  persist(); renderAll();
+  alert("Turnier abgeschlossen. Saisonpunkte berechnet.");
+});
+
+/* Round Robin (DT) - basic */
+genRRBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const s = activeSeason();
+  if(!s || s.type!=="RR") return alert("Nur DT Saison.");
+  if((s.roster||[]).length < 2) return alert("Bitte in Nicknames-Tab die DT-Teilnehmer mit 'In Saison' markieren.");
+  if(s.rr.rounds.length && !confirm("Es gibt schon einen Spielplan. Neu erzeugen überschreibt ihn. Fortfahren?")) return;
+  const schedule = buildRoundRobin(s.roster);
+  s.rr.rounds = schedule.map((pairs, idx)=>({
+    no: idx+1,
+    confirmed: false,
+    matches: pairs.map((p,i)=>({
+      id: uid(), aId:p[0], bId:p[1],
+      tableNo: i+1,
+      resultType:"NORMAL",
+      aScore:null,bScore:null,note:"",
+      decided:false, confirmed:false
+    }))
+  }));
+  persist(); renderAll();
+  alert("RR Spielplan erzeugt.");
+});
+loadRRRoundBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const s = activeSeason();
+  if(!s || s.type!=="RR") return;
+  const rno = parseInt(rrRoundSel.value,10);
+  if(!rno) return;
+  renderRRRoundEditor(rno);
+});
+saveRRBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const s = activeSeason();
+  if(!s || s.type!=="RR") return;
+  const rno = parseInt(rrRoundSel.value,10);
+  if(!rno) return;
+  const r = s.rr.rounds.find(x=>x.no===rno);
+  if(!r) return;
+  applyRRInputs(r);
+  persist(); renderAll();
+  renderRRRoundEditor(rno);
+  alert("Spieltag gespeichert.");
+});
+confirmRRRoundBtn.addEventListener("click", ()=>{
+  requireAdmin();
+  const s = activeSeason();
+  if(!s || s.type!=="RR") return;
+  const rno = parseInt(rrRoundSel.value,10);
+  if(!rno) return;
+  const r = s.rr.rounds.find(x=>x.no===rno);
+  if(!r) return;
+  applyRRInputs(r);
+  const open = r.matches.some(m=>!isMatchDecided(m));
+  if(open) return alert("Bitte alle Spiele entscheiden, bevor du bestätigst.");
+  r.confirmed = true;
+  for(const m of r.matches) m.confirmed = true;
+  persist(); renderAll();
+  renderRRRoundEditor(rno);
+  alert("Spieltag bestätigt.");
+});
+
+/* Rendering */
+function renderAll(){
+  renderLogo();
+  authPill.textContent = "Status: " + (isAdmin ? "Admin" : "gesperrt");
+  authBtn.textContent = isAdmin ? "Sperren" : "Admin öffnen";
+  topAdminBtns.classList.toggle("hide", !isAdmin);
+
+  systemSel.value = activeSystem();
+
+  const sys = activeSystem();
+  const seasons = state.seasons.filter(s=>s.system===sys).sort((a,b)=>b.createdAt-a.createdAt);
+  seasonSel.innerHTML = seasons.length
+    ? seasons.map(s=>`<option value="${esc(s.id)}"${s.id===activeSeasonId()?" selected":""}>${esc(s.name)}</option>`).join("")
+    : `<option value="">(keine Saison)</option>`;
+
+  scoringPill.textContent = `${SCORE.win}/${SCORE.draw}/${SCORE.loss}`;
+
+  kpiRow.innerHTML = `
+    <span class="badge">${state.teams.length} Nicknames</span>
+    <span class="badge">${state.seasons.length} aktive Saisons</span>
+    <span class="badge">${state.archive.seasons.length} Archiv-Saisons</span>
+  `;
+
+  const s = activeSeason();
+  if(s && s.type==="SWISS_SERIES"){
+    attendanceBonusSel.value = s.settings.attendanceBonus ? "ON":"OFF";
+    attendanceBonusSel.disabled = !isAdmin;
+  } else {
+    attendanceBonusSel.value="OFF";
+    attendanceBonusSel.disabled = true;
+  }
+
+  renderTeamsTab();
+  renderSwissTab();
+  renderRRTab();
 }
 
-function activeSys(){ return $("sys").value; }
-function activeSeason(){ return state.seasons[activeSys()]; }
+function renderTeamsTab(){
+  const s = activeSeason();
+  const inRoster = s && s.type==="RR" ? new Set(s.roster||[]) : new Set();
 
-function ensureSeason(sys){
-  if(!state.seasons[sys]){
-    state.seasons[sys]={
-      name: sys+" Saison",
-      createdAt: Date.now(),
-      attendanceBonus: false,
-      tournaments:[],
-      seasonPointsById:{},
-      tournamentsPlayedById:{}
-    };
+  teamList.innerHTML = state.teams
+    .slice().sort((a,b)=>a.name.localeCompare(b.name,"de"))
+    .map(t=>{
+      const delBtn = `<button ${isAdmin?"":"disabled"} class="btn-bad" onclick="deleteTeam('${esc(t.id)}')">Löschen</button>`;
+      const rrBtn = (s && s.type==="RR")
+        ? `<button ${isAdmin?"":"disabled"} class="${inRoster.has(t.id)?"btn-good":""}" onclick="toggleRoster('${esc(t.id)}')">${inRoster.has(t.id)?"In Saison ✓":"In Saison"}</button>`
+        : "";
+      return `<div class="item">
+        <div><b>${esc(t.name)}</b><div class="meta">ID: ${esc(t.id.slice(0,8))}</div></div>
+        <div class="row">${rrBtn}${delBtn}</div>
+      </div>`;
+    }).join("") || `<div class="muted small">Noch keine Nicknames.</div>`;
+
+  addTeamBtn.disabled = !isAdmin;
+}
+
+function renderSwissTab(){
+  const s = activeSeason();
+  const enabled = isAdmin && s && s.type==="SWISS_SERIES";
+
+  newTournamentBtn.disabled = !enabled;
+  closeTournamentBtn.disabled = !enabled;
+  tournamentSel.disabled = !enabled;
+  tAddPlayerSel.disabled = !enabled;
+  tAddPlayerBtn.disabled = !enabled;
+  genSwissRoundBtn.disabled = !enabled;
+  roundSel.disabled = !enabled;
+  loadRoundBtn.disabled = !enabled;
+  saveRoundBtn.disabled = !enabled;
+  closeRoundBtn.disabled = !enabled;
+
+  if(!s || s.type!=="SWISS_SERIES"){
+    tournamentSel.innerHTML = `<option value="">(keine Swiss-Saison)</option>`;
+    tournamentNPill.textContent = "0";
+    tournamentStatusPill.textContent = "—";
+    tAddPlayerSel.innerHTML = `<option value="">(—)</option>`;
+    tPlayerList.innerHTML = `<div class="muted small">Lege eine Saison in PKM oder YGO an.</div>`;
+    roundSel.innerHTML = `<option value="">(—)</option>`;
+    roundEditor.classList.add("hide");
+    swissStandingsBody.innerHTML = `<tr><td colspan="9" class="muted">—</td></tr>`;
+    seasonSwissBody.innerHTML = `<tr><td colspan="4" class="muted">—</td></tr>`;
+    return;
+  }
+
+  const ts = s.tournaments.slice().sort((a,b)=>b.createdAt-a.createdAt);
+  if(!s.activeTournamentId && ts[0]) s.activeTournamentId = ts[0].id;
+  tournamentSel.innerHTML = ts.length
+    ? ts.map(t=>`<option value="${esc(t.id)}"${t.id===s.activeTournamentId?" selected":""}>${esc(t.name)}${t.status==="CLOSED"?" ✓":""}</option>`).join("")
+    : `<option value="">(noch kein Turnier)</option>`;
+
+  const t = activeTournament();
+  if(!t){
+    tournamentNPill.textContent="0";
+    tournamentStatusPill.textContent="—";
+    tAddPlayerSel.innerHTML = `<option value="">(—)</option>`;
+    tPlayerList.innerHTML = `<div class="muted small">Starte ein neues Turnier.</div>`;
+    roundSel.innerHTML = `<option value="">(—)</option>`;
+    roundEditor.classList.add("hide");
+    swissStandingsBody.innerHTML = `<tr><td colspan="9" class="muted">—</td></tr>`;
+  } else {
+    tournamentNPill.textContent = String(t.players.length);
+    tournamentStatusPill.textContent = (t.status==="OPEN" ? "OFFEN" : "ABGESCHLOSSEN");
+
+    // add player select from global teams
+    const available = state.teams.slice().sort((a,b)=>a.name.localeCompare(b.name,"de"));
+    tAddPlayerSel.innerHTML = [`<option value="">– wählen –</option>`]
+      .concat(available.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`))
+      .join("");
+
+    const byId = Object.fromEntries(state.teams.map(x=>[x.id,x.name]));
+    tPlayerList.innerHTML = t.players.length
+      ? t.players.slice().sort((a,b)=>(byId[a]||"").localeCompare(byId[b]||"","de")).map(pid=>`
+          <div class="item">
+            <div><b>${esc(byId[pid]||"Unbekannt")}</b><div class="meta">${esc(pid.slice(0,8))}</div></div>
+            <div class="row">
+              <button ${isAdmin && t.status==="OPEN" ? "" : "disabled"} class="btn-bad" onclick="removeTournamentPlayer('${esc(pid)}')">Entfernen</button>
+            </div>
+          </div>
+      `).join("")
+      : `<div class="muted small">Noch keine Teilnehmer im Turnier.</div>`;
+
+    const rounds = t.rounds.slice().sort((a,b)=>a.no-b.no);
+    roundSel.innerHTML = rounds.length
+      ? [`<option value="">– wählen –</option>`]
+        .concat(rounds.map(r=>`<option value="${r.no}">Runde ${r.no}${r.status==="CLOSED"?" ✓":""}</option>`))
+        .join("")
+      : `<option value="">(noch keine Runde)</option>`;
+
+    if(roundSel.value){
+      renderSwissRoundEditor(parseInt(roundSel.value,10));
+    } else {
+      roundEditor.classList.add("hide");
+    }
+
+    // live standings based on CLOSED rounds
+    const standings = computeStandingsSwiss(t, s.settings.scoring);
+    swissStandingsBody.innerHTML = standings.length ? standings.map((r,i)=>`
+      <tr>
+        <td>${i+1}</td><td><b>${esc(r.name)}</b></td>
+        <td class="right">${r.played}</td><td class="right">${r.wins}</td><td class="right">${r.draws}</td><td class="right">${r.losses}</td>
+        <td class="right"><b>${r.pts}</b></td><td class="right">${r.opp}</td><td class="right">${r.oppopp}</td>
+      </tr>
+    `).join("") : `<tr><td colspan="9" class="muted">Noch keine abgeschlossene Runde.</td></tr>`;
+  }
+
+  renderSwissSeasonStandings(s);
+}
+
+function renderSwissRoundEditor(rno){
+  const t = activeTournament();
+  const s = activeSeason();
+  if(!t || !s) return;
+  const r = t.rounds.find(x=>x.no===rno);
+  if(!r) return;
+
+  roundEditor.classList.remove("hide");
+  roundSel.value = String(rno);
+
+  const byId = Object.fromEntries(state.teams.map(x=>[x.id,x.name]));
+  const canEdit = isAdmin && t.status==="OPEN" && r.status==="OPEN";
+
+  roundMatchList.innerHTML = r.matches.map(m=>{
+    const a = byId[m.aId] || "Unbekannt";
+    const b = (m.bId===null) ? "BYE" : (byId[m.bId]||"Unbekannt");
+    const isBye = (m.bId===null);
+    const decided = isMatchDecided(m);
+
+    return `
+      <div class="item" style="flex-direction:column;gap:8px;">
+        <div class="split">
+          <div><b>Tisch ${m.tableNo ?? "—"} · ${esc(a)} – ${esc(b)}</b></div>
+          <div class="muted small">${r.status==="CLOSED" ? "Runde abgeschlossen" : (decided ? "Entschieden" : "Offen")}</div>
+        </div>
+        ${isBye ? `<div class="muted small">BYE zählt als Sieg. (automatisch)</div>` : `
+          <div class="row">
+            <div style="width:170px;">
+              <label>Resultat</label>
+              <select data-rt="${esc(m.id)}" ${canEdit?"":"disabled"}>
+                <option value="NORMAL"${m.resultType==="NORMAL"?" selected":""}>Normal</option>
+                <option value="DOUBLE_LOSS"${m.resultType==="DOUBLE_LOSS"?" selected":""}>Doppelte Niederlage</option>
+              </select>
+            </div>
+            <div style="width:120px;">
+              <label>A</label>
+              <input data-a="${esc(m.id)}" type="number" min="0" placeholder="0" value="${m.aScore===null?"":m.aScore}" ${canEdit && m.resultType!=="DOUBLE_LOSS" ? "" : "disabled"} />
+            </div>
+            <div style="width:120px;">
+              <label>B</label>
+              <input data-b="${esc(m.id)}" type="number" min="0" placeholder="0" value="${m.bScore===null?"":m.bScore}" ${canEdit && m.resultType!=="DOUBLE_LOSS" ? "" : "disabled"} />
+            </div>
+            <div style="width:120px;">
+              <label>Tisch</label>
+              <input data-t="${esc(m.id)}" type="number" min="1" value="${m.tableNo??""}" ${canEdit?"":"disabled"} />
+            </div>
+            <div style="flex:1;min-width:220px;">
+              <label>Notiz</label>
+              <input data-n="${esc(m.id)}" value="${esc(m.note||"")}" ${canEdit?"":"disabled"} />
+            </div>
+          </div>
+        `}
+      </div>
+    `;
+  }).join("");
+
+  const open = r.matches.filter(m=>m.bId!==null).some(m=>!isMatchDecided(m));
+  roundHint.textContent = r.status==="CLOSED"
+    ? "Diese Runde ist abgeschlossen (und wird veröffentlicht)."
+    : (open ? "Noch offen: Entscheide alle Spiele, dann kannst du abschließen." : "Alle Spiele sind entschieden. Du kannst die Runde abschließen.");
+
+  roundMatchList.querySelectorAll("select[data-rt]").forEach(sel=>{
+    sel.addEventListener("change", ()=>{
+      const id = sel.getAttribute("data-rt");
+      const a = roundMatchList.querySelector(`input[data-a="${cssEsc(id)}"]`);
+      const b = roundMatchList.querySelector(`input[data-b="${cssEsc(id)}"]`);
+      if(sel.value==="DOUBLE_LOSS"){
+        if(a){ a.value=""; a.disabled=true; }
+        if(b){ b.value=""; b.disabled=true; }
+      } else {
+        if(a){ a.disabled=false; }
+        if(b){ b.disabled=false; }
+      }
+    });
+  });
+}
+
+function applyRoundInputs(r){
+  for(const m of r.matches){
+    if(m.bId===null) continue;
+    const rt = document.querySelector(`select[data-rt="${cssEsc(m.id)}"]`);
+    if(rt) m.resultType = rt.value;
+
+    const t = document.querySelector(`input[data-t="${cssEsc(m.id)}"]`);
+    if(t){
+      const v = String(t.value||"").trim();
+      m.tableNo = v===""? m.tableNo : clampInt(v,1,9999);
+    }
+    const n = document.querySelector(`input[data-n="${cssEsc(m.id)}"]`);
+    if(n) m.note = String(n.value||"").slice(0,140);
+
+    if(m.resultType==="DOUBLE_LOSS"){
+      m.aScore = 0; m.bScore = 0; m.decided=true; continue;
+    }
+    const a = document.querySelector(`input[data-a="${cssEsc(m.id)}"]`);
+    const b = document.querySelector(`input[data-b="${cssEsc(m.id)}"]`);
+    const av = a ? String(a.value||"").trim() : "";
+    const bv = b ? String(b.value||"").trim() : "";
+    m.aScore = av==="" ? null : clampInt(av,0,9999);
+    m.bScore = bv==="" ? null : clampInt(bv,0,9999);
+    m.decided = (m.aScore!==null && m.bScore!==null);
   }
 }
 
-function render(){
-  $("sys").value = state.ui.sys || "PKM";
-  const sys = activeSys();
-  const s = state.seasons[sys];
+function renderSwissSeasonStandings(s){
+  const byId = Object.fromEntries(state.teams.map(x=>[x.id,x.name]));
+  const playersSet = new Set();
+  for(const t of s.tournaments){
+    for(const pid of t.players) playersSet.add(pid);
+  }
+  const rows = [...playersSet].map(id=>({
+    id, name: byId[id]||"Unbekannt",
+    pts: Number(s.seasonPointsByTeamId?.[id]||0),
+    tournaments: countTournamentsPlayed(s,id)
+  }));
+  rows.sort((a,b)=>(b.pts-a.pts)||(b.tournaments-a.tournaments)||a.name.localeCompare(b.name,"de"));
+  seasonSwissBody.innerHTML = rows.length
+    ? rows.map((r,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td><b>${esc(r.name)}</b></td>
+          <td class="right">${r.tournaments}</td>
+          <td class="right"><b>${r.pts.toFixed(1)}</b></td>
+        </tr>
+      `).join("")
+    : `<tr><td colspan="4" class="muted">Noch keine Saisonpunkte (erst nach Turnierabschluss).</td></tr>`;
+}
+function countTournamentsPlayed(s, teamId){
+  let c=0; for(const t of s.tournaments){ if(t.players?.includes(teamId)) c++; } return c;
+}
 
-  $("seasonName").value = s ? s.name : "";
-  $("seasonStatus").textContent = s ? (sys+" · "+s.name) : (sys+" · keine Saison");
-  $("lastSaved").textContent = "Gespeichert: " + (state._lastSaved ? new Date(state._lastSaved).toLocaleString("de-DE") : "—");
+function renderRRTab(){
+  const s = activeSeason();
+  const enabled = isAdmin && s && s.type==="RR";
+  genRRBtn.disabled = !enabled;
+  rrRoundSel.disabled = !enabled;
+  loadRRRoundBtn.disabled = !enabled;
+  saveRRBtn.disabled = !enabled;
+  confirmRRRoundBtn.disabled = !enabled;
 
-  $("toggleBonus").textContent = "Teilnahmebonus: " + (state.settings.attendanceBonus[sys] ? "An (+1.0)" : "Aus");
+  if(!s || s.type!=="RR"){
+    rrRoundSel.innerHTML = `<option value="">(keine DT Saison)</option>`;
+    rrEditor.classList.add("hide");
+    rrStandingsBody.innerHTML = `<tr><td colspan="9" class="muted">Lege eine DT Saison an.</td></tr>`;
+    return;
+  }
+  rrRoundSel.innerHTML = s.rr.rounds.length
+    ? [`<option value="">– wählen –</option>`].concat(
+        s.rr.rounds.map(r=>`<option value="${r.no}">Spieltag ${r.no}${r.confirmed?" ✓":""}</option>`)
+      ).join("")
+    : `<option value="">(noch kein Spielplan)</option>`;
 
-  // nicknames
-  $("nickList").innerHTML = state.teams.length
-    ? state.teams.slice().sort((a,b)=>a.name.localeCompare(b.name,"de")).map(t=>`<li>${t.name}</li>`).join("")
-    : `<li class="muted">Noch keine Nicknames.</li>`;
+  if(rrRoundSel.value){
+    renderRRRoundEditor(parseInt(rrRoundSel.value,10));
+  } else rrEditor.classList.add("hide");
 
-  // swiss status
-  if(sys==="DT"){
-    $("tStatus").textContent = "DT ist Round Robin (in dieser Demo noch nicht umgesetzt).";
-  } else {
-    if(!s){ $("tStatus").textContent = "Lege zuerst eine Saison an."; }
-    else {
-      const t = s.tournaments[s.tournaments.length-1];
-      if(!t) $("tStatus").textContent = "Noch kein Turnier gestartet.";
-      else $("tStatus").textContent = `Letztes Turnier: ${t.name} · Teilnehmer: ${t.N} · Status: ${t.closed?"abgeschlossen":"offen"}`;
+  renderRRStandings(s);
+}
+
+function renderRRRoundEditor(rno){
+  const s = activeSeason();
+  if(!s || s.type!=="RR") return;
+  const r = s.rr.rounds.find(x=>x.no===rno);
+  if(!r) return;
+  rrEditor.classList.remove("hide");
+  rrRoundSel.value = String(rno);
+
+  const byId = Object.fromEntries(state.teams.map(x=>[x.id,x.name]));
+  const canEdit = isAdmin && !r.confirmed;
+
+  rrMatchList.innerHTML = r.matches.map(m=>{
+    const a = byId[m.aId]||"Unbekannt";
+    const b = byId[m.bId]||"Unbekannt";
+    return `
+      <div class="item" style="flex-direction:column;gap:8px;">
+        <div class="split">
+          <div><b>Tisch ${m.tableNo ?? "—"} · ${esc(a)} – ${esc(b)}</b></div>
+          <div class="muted small">${r.confirmed ? "Bestätigt" : (isMatchDecided(m) ? "Entschieden" : "Offen")}</div>
+        </div>
+        <div class="row">
+          <div style="width:120px;">
+            <label>A</label>
+            <input data-rra="${esc(m.id)}" type="number" min="0" value="${m.aScore===null?"":m.aScore}" ${canEdit?"":"disabled"} />
+          </div>
+          <div style="width:120px;">
+            <label>B</label>
+            <input data-rrb="${esc(m.id)}" type="number" min="0" value="${m.bScore===null?"":m.bScore}" ${canEdit?"":"disabled"} />
+          </div>
+          <div style="width:120px;">
+            <label>Tisch</label>
+            <input data-rrt="${esc(m.id)}" type="number" min="1" value="${m.tableNo??""}" ${canEdit?"":"disabled"} />
+          </div>
+          <div style="flex:1;min-width:220px;">
+            <label>Notiz</label>
+            <input data-rrn="${esc(m.id)}" value="${esc(m.note||"")}" ${canEdit?"":"disabled"} />
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const open = r.matches.some(m=>!isMatchDecided(m));
+  rrHint.textContent = r.confirmed
+    ? "Dieser Spieltag ist bestätigt (und wird veröffentlicht)."
+    : (open ? "Noch offen: Bitte alle Spiele entscheiden, dann kannst du bestätigen." : "Alle Spiele sind entschieden. Du kannst bestätigen.");
+}
+function applyRRInputs(r){
+  for(const m of r.matches){
+    const a = document.querySelector(`input[data-rra="${cssEsc(m.id)}"]`);
+    const b = document.querySelector(`input[data-rrb="${cssEsc(m.id)}"]`);
+    const t = document.querySelector(`input[data-rrt="${cssEsc(m.id)}"]`);
+    const n = document.querySelector(`input[data-rrn="${cssEsc(m.id)}"]`);
+    const av = a ? String(a.value||"").trim() : "";
+    const bv = b ? String(b.value||"").trim() : "";
+    m.aScore = av==="" ? null : clampInt(av,0,9999);
+    m.bScore = bv==="" ? null : clampInt(bv,0,9999);
+    m.decided = (m.aScore!==null && m.bScore!==null);
+    if(t){ const tv=String(t.value||"").trim(); m.tableNo = tv===""?m.tableNo:clampInt(tv,1,9999); }
+    if(n) m.note = String(n.value||"").slice(0,140);
+  }
+}
+function renderRRStandings(s){
+  const byId = Object.fromEntries(state.teams.map(x=>[x.id,x.name]));
+  const matches = s.rr.rounds.flatMap(r=>r.matches.filter(m=>m.confirmed && isMatchDecided(m)));
+  const rows = new Map((s.roster||[]).map(id=>[id,{
+    id,name:byId[id]||"Unbekannt",
+    played:0,wins:0,draws:0,losses:0,pts:0,
+    opponents:new Set()
+  }]));
+  for(const m of matches){
+    const a = rows.get(m.aId), b = rows.get(m.bId);
+    if(!a||!b) continue;
+    a.played++; b.played++;
+    a.opponents.add(b.id); b.opponents.add(a.id);
+    if(m.aScore>m.bScore){ a.wins++; b.losses++; a.pts+=SCORE.win; b.pts+=SCORE.loss; }
+    else if(m.aScore<m.bScore){ b.wins++; a.losses++; b.pts+=SCORE.win; a.pts+=SCORE.loss; }
+    else { a.draws++; b.draws++; a.pts+=SCORE.draw; b.pts+=SCORE.draw; }
+  }
+  const oppPts=new Map();
+  for(const r of rows.values()){
+    let sum=0; for(const oid of r.opponents) sum += rows.get(oid)?.pts ?? 0;
+    oppPts.set(r.id,sum);
+  }
+  const oppOpp=new Map();
+  for(const r of rows.values()){
+    let sum=0; for(const oid of r.opponents) sum += oppPts.get(oid) ?? 0;
+    oppOpp.set(r.id,sum);
+  }
+  const arr=[...rows.values()].map(r=>({...r,opp:oppPts.get(r.id)||0,oppopp:oppOpp.get(r.id)||0}));
+  arr.sort((a,b)=>(b.pts-a.pts)||(b.opp-a.opp)||(b.oppopp-a.oppopp)||a.name.localeCompare(b.name,"de"));
+  rrStandingsBody.innerHTML = arr.length ? arr.map((r,i)=>`
+    <tr>
+      <td>${i+1}</td><td><b>${esc(r.name)}</b></td>
+      <td class="right">${r.played}</td><td class="right">${r.wins}</td><td class="right">${r.draws}</td><td class="right">${r.losses}</td>
+      <td class="right"><b>${r.pts}</b></td><td class="right">${r.opp}</td><td class="right">${r.oppopp}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="9" class="muted">Noch keine bestätigten Spieltage.</td></tr>`;
+}
+
+/* Public snapshot */
+function buildPublicSnapshot(){
+  const now = new Date().toISOString();
+  const byId = Object.fromEntries(state.teams.map(x=>[x.id,x.name]));
+  const pub = { version: 4, lastUpdated: now, logoDataUrl: state.logoDataUrl || null, systems: {} };
+  for(const sys of SYSTEMS){
+    const seasons = state.seasons.filter(s=>s.system===sys).sort((a,b)=>b.createdAt-a.createdAt);
+    const active = seasons[0] ?? null;
+    const archived = state.archive.seasons.filter(s=>s.system===sys).sort((a,b)=>b.endedAt-a.endedAt);
+    pub.systems[sys] = {
+      activeSeason: active ? publicSeason(active, byId) : null,
+      archive: archived.map(s=>publicSeason(s, byId, true))
+    };
+  }
+  return pub;
+}
+function publicSeason(s, byId, isArchived=false){
+  const base = {
+    id:s.id, system:s.system, name:s.name, type:s.type,
+    createdAt:s.createdAt, endedAt:s.endedAt || null,
+    settings:s.settings,
+    roster:(s.roster||[]).map(id=>({id,name:byId[id]||"Unbekannt"})),
+  };
+  if(s.type==="SWISS_SERIES"){
+    const tournaments = (s.tournaments||[]).slice().sort((a,b)=>b.createdAt-a.createdAt).map(t=>{
+      const rounds = (t.rounds||[]).slice().sort((a,b)=>a.no-b.no);
+      const closed = rounds.filter(r=>r.status==="CLOSED").map(r=>publicSwissRound(r,byId,true));
+      const open = rounds.find(r=>r.status==="OPEN");
+      const openPub = open ? publicSwissRound(open,byId,false) : null;
+      return {
+        id:t.id,name:t.name,createdAt:t.createdAt,closedAt:t.closedAt||null,status:t.status,
+        players:(t.players||[]).map(id=>({id,name:byId[id]||"Unbekannt"})),
+        N:(t.players||[]).length,
+        roundsClosed:closed,
+        roundOpen:openPub,
+        seasonPointsByTeamId: t.status==="CLOSED" ? (t.seasonPointsByTeamId||{}) : {}
+      };
+    });
+    return {...base, seasonPointsByTeamId:s.seasonPointsByTeamId||{}, tournaments};
+  }
+  if(s.type==="RR"){
+    const rounds = (s.rr?.rounds||[]).slice().sort((a,b)=>a.no-b.no).map(r=>{
+      const conf=!!r.confirmed;
+      return {
+        no:r.no, confirmed:conf,
+        matches:r.matches.map(m=>({
+          id:m.id, tableNo:m.tableNo??null,
+          a:{id:m.aId,name:byId[m.aId]||"Unbekannt"},
+          b:{id:m.bId,name:byId[m.bId]||"Unbekannt"},
+          note:m.note||"",
+          aScore: conf ? m.aScore : null,
+          bScore: conf ? m.bScore : null
+        }))
+      };
+    });
+    return {...base, rounds};
+  }
+  return base;
+}
+function publicSwissRound(r, byId, revealScores){
+  return {
+    no:r.no,status:r.status,
+    matches:r.matches.map(m=>({
+      id:m.id, tableNo:m.tableNo??null,
+      resultType:m.resultType||"NORMAL",
+      a:{id:m.aId,name:byId[m.aId]||"Unbekannt"},
+      b:m.bId===null?null:{id:m.bId,name:byId[m.bId]||"Unbekannt"},
+      note:m.note||"",
+      aScore: revealScores ? m.aScore : null,
+      bScore: revealScores ? m.bScore : null
+    }))
+  };
+}
+
+/* Swiss helpers */
+function isMatchDecided(m){
+  if(m.resultType==="BYE") return true;
+  if(m.resultType==="DOUBLE_LOSS") return true;
+  return (m.aScore!==null && m.bScore!==null);
+}
+function computeTournamentPerformance(t, scoring){
+  const perf={};
+  for(const pid of t.players) perf[pid]={matchPoints:0, roundsPlayed:0};
+  for(const r of (t.rounds||[])){
+    if(r.status!=="CLOSED") continue;
+    for(const m of r.matches){
+      if(m.resultType==="BYE"){
+        perf[m.aId].matchPoints += scoring.win;
+        perf[m.aId].roundsPlayed += 1;
+        continue;
+      }
+      perf[m.aId].roundsPlayed += 1;
+      perf[m.bId].roundsPlayed += 1;
+      if(m.resultType==="DOUBLE_LOSS") continue;
+      if(m.aScore===null||m.bScore===null) continue;
+      if(m.aScore>m.bScore){ perf[m.aId].matchPoints+=scoring.win; }
+      else if(m.aScore<m.bScore){ perf[m.bId].matchPoints+=scoring.win; }
+      else { perf[m.aId].matchPoints+=scoring.draw; perf[m.bId].matchPoints+=scoring.draw; }
+    }
+  }
+  return perf;
+}
+function computeStandingsSwiss(t, scoring){
+  const byId = Object.fromEntries(state.teams.map(x=>[x.id,x.name]));
+  const rows = new Map(t.players.map(id=>[id,{
+    id,name:byId[id]||"Unbekannt",
+    played:0,wins:0,draws:0,losses:0,pts:0,
+    opponents:new Set()
+  }]));
+  // only CLOSED rounds
+  for(const r of t.rounds){
+    if(r.status!=="CLOSED") continue;
+    for(const m of r.matches){
+      if(m.resultType==="BYE"){
+        const a=rows.get(m.aId); if(!a) continue;
+        a.played++; a.wins++; a.pts+=scoring.win;
+        continue;
+      }
+      const a=rows.get(m.aId), b=rows.get(m.bId);
+      if(!a||!b) continue;
+      a.played++; b.played++;
+      a.opponents.add(b.id); b.opponents.add(a.id);
+
+      if(m.resultType==="DOUBLE_LOSS"){
+        a.losses++; b.losses++;
+        continue;
+      }
+      if(m.aScore===null||m.bScore===null) continue;
+      if(m.aScore>m.bScore){ a.wins++; b.losses++; a.pts+=scoring.win; }
+      else if(m.aScore<m.bScore){ b.wins++; a.losses++; b.pts+=scoring.win; }
+      else { a.draws++; b.draws++; a.pts+=scoring.draw; b.pts+=scoring.draw; }
+    }
+  }
+  const oppPts=new Map();
+  for(const r of rows.values()){
+    let sum=0; for(const oid of r.opponents) sum += rows.get(oid)?.pts ?? 0;
+    oppPts.set(r.id,sum);
+  }
+  const oppOpp=new Map();
+  for(const r of rows.values()){
+    let sum=0; for(const oid of r.opponents) sum += oppPts.get(oid) ?? 0;
+    oppOpp.set(r.id,sum);
+  }
+  const arr=[...rows.values()].map(r=>({...r,opp:oppPts.get(r.id)||0,oppopp:oppOpp.get(r.id)||0}));
+  arr.sort((a,b)=>(b.pts-a.pts)||(b.opp-a.opp)||(b.oppopp-a.oppopp)||a.name.localeCompare(b.name,"de"));
+  return arr;
+}
+function buildSwissPairings(playerIds, rounds, scoring){
+  // points from CLOSED rounds
+  const points=new Map(playerIds.map(id=>[id,0]));
+  const played=new Map(playerIds.map(id=>[id,new Set()]));
+  const hadBye=new Set();
+
+  for(const r of rounds){
+    for(const m of r.matches){
+      if(m.bId===null){
+        hadBye.add(m.aId);
+        if(r.status==="CLOSED") points.set(m.aId, points.get(m.aId)+scoring.win);
+        continue;
+      }
+      played.get(m.aId).add(m.bId);
+      played.get(m.bId).add(m.aId);
+      if(r.status!=="CLOSED") continue;
+      if(m.resultType==="DOUBLE_LOSS") continue;
+      if(m.aScore===null||m.bScore===null) continue;
+      if(m.aScore>m.bScore) points.set(m.aId, points.get(m.aId)+scoring.win);
+      else if(m.aScore<m.bScore) points.set(m.bId, points.get(m.bId)+scoring.win);
+      else { points.set(m.aId, points.get(m.aId)+scoring.draw); points.set(m.bId, points.get(m.bId)+scoring.draw); }
     }
   }
 
-  // season points table
-  if(!s){
-    $("spBody").innerHTML = `<tr><td colspan="4" class="muted">—</td></tr>`;
-  } else {
-    const rows = state.teams.map(t=>({
-      id:t.id, name:t.name,
-      pts:Number(s.seasonPointsById[t.id]||0),
-      played:Number(s.tournamentsPlayedById[t.id]||0)
-    })).filter(r=>r.played>0 || r.pts>0);
+  const sorted = playerIds.slice().sort((a,b)=>(points.get(b)-points.get(a))||(a.localeCompare(b)));
+  const remaining=new Set(sorted);
+  const pairings=[];
 
-    rows.sort((a,b)=>(b.pts-a.pts)||(b.played-a.played)||a.name.localeCompare(b.name,"de"));
-    $("spBody").innerHTML = rows.length ? rows.map((r,i)=>`
-      <tr><td>${i+1}</td><td><b>${r.name}</b></td><td class="right">${r.played}</td><td class="right"><b>${r.pts.toFixed(1)}</b></td></tr>
-    `).join("") : `<tr><td colspan="4" class="muted">Noch keine Saisonpunkte.</td></tr>`;
+  if(sorted.length%2===1){
+    let bye=null;
+    for(let i=sorted.length-1;i>=0;i--){
+      const id=sorted[i];
+      if(!hadBye.has(id)){ bye=id; break; }
+    }
+    if(!bye) bye=sorted[sorted.length-1];
+    remaining.delete(bye);
+    pairings.push({type:"BYE", playerId:bye});
   }
+
+  const sortedRem = ()=>[...remaining].sort((a,b)=>(points.get(b)-points.get(a))||(a.localeCompare(b)));
+
+  while(remaining.size>0){
+    const list=sortedRem();
+    const a=list[0];
+    remaining.delete(a);
+    const opp=played.get(a)||new Set();
+    let best=null;
+    for(let i=1;i<list.length;i++){
+      const cand=list[i];
+      if(!remaining.has(cand)) continue;
+      if(!opp.has(cand)){ best=cand; break; }
+    }
+    if(!best) best=list[1];
+    if(!best) break;
+    remaining.delete(best);
+    pairings.push({type:"MATCH", aId:a, bId:best});
+  }
+  return pairings;
 }
 
-$("sys").addEventListener("change", ()=>{
-  state.ui.sys = activeSys();
-  render();
-});
-
-$("addNick").addEventListener("click", ()=>{
-  const n=$("nick").value.trim();
-  if(!n) return;
-  if(state.teams.some(t=>t.name.toLowerCase()===n.toLowerCase())) return alert("Nickname existiert schon.");
-  state.teams.push({id:String(Date.now()+Math.random()), name:n});
-  $("nick").value="";
-  save();
-});
-
-$("createSeason").addEventListener("click", ()=>{
-  const sys=activeSys();
-  const name=$("seasonName").value.trim() || (sys+" Saison");
-  state.seasons[sys]={
-    name,
-    createdAt: Date.now(),
-    attendanceBonus: state.settings.attendanceBonus[sys] || false,
-    tournaments:[],
-    seasonPointsById:{},
-    tournamentsPlayedById:{}
-  };
-  save();
-  alert("Saison angelegt: "+name);
-});
-
-$("toggleBonus").addEventListener("click", ()=>{
-  const sys=activeSys();
-  state.settings.attendanceBonus[sys] = !state.settings.attendanceBonus[sys];
-  // reflect in season if exists
-  if(state.seasons[sys]) state.seasons[sys].attendanceBonus = state.settings.attendanceBonus[sys];
-  save();
-});
-
-$("startT").addEventListener("click", ()=>{
-  const sys=activeSys();
-  if(sys==="DT") return alert("DT ist in dieser Demo noch nicht umgesetzt.");
-  ensureSeason(sys);
-  const s=state.seasons[sys];
-  if(state.teams.length<2) return alert("Mindestens 2 Nicknames anlegen.");
-  const number = s.tournaments.length + 1;
-  const dateStr = new Date().toISOString().slice(0,10);
-  s.tournaments.push({
-    id:String(Date.now()),
-    name:`#${number} – ${dateStr}`,
-    N: state.teams.length,
-    closed:false
-  });
-  save();
-});
-
-$("closeT").addEventListener("click", ()=>{
-  const sys=activeSys();
-  if(sys==="DT") return alert("DT ist in dieser Demo noch nicht umgesetzt.");
-  const s=activeSeason();
-  if(!s) return alert("Erst Saison anlegen.");
-  const t = s.tournaments[s.tournaments.length-1];
-  if(!t) return alert("Erst Turnier starten.");
-  if(t.closed) return alert("Turnier ist schon abgeschlossen.");
-
-  // Season points: perf assumed 100% for demo (weil keine Runden/Ergebnisse in v3)
-  // Wir werten: maximale Leistung 1.0 pro Turnier (nur Demo). Teilnehmer-Faktor: sqrt(N/8).
-  const factor = Math.sqrt((t.N||1)/8);
-  for(const p of state.teams){
-    s.tournamentsPlayedById[p.id] = (s.tournamentsPlayedById[p.id]||0) + 1;
-    let sp = 1.0 * 10 * factor;
-    if(state.settings.attendanceBonus[sys]) sp += 1.0;
-    sp = round1(sp);
-    s.seasonPointsById[p.id] = round1((s.seasonPointsById[p.id]||0) + sp);
+/* RR schedule */
+function buildRoundRobin(playerIds){
+  const ids=playerIds.slice();
+  const BYE="__BYE__";
+  if(ids.length%2===1) ids.push(BYE);
+  const n=ids.length, rounds=n-1, half=n/2;
+  let arr=ids.slice();
+  const schedule=[];
+  for(let r=0;r<rounds;r++){
+    const pairs=[];
+    for(let i=0;i<half;i++){
+      const a=arr[i], b=arr[n-1-i];
+      if(a!==BYE && b!==BYE) pairs.push([a,b]);
+    }
+    schedule.push(pairs);
+    arr=[arr[0], arr[n-1], ...arr.slice(1,n-1)];
   }
+  return schedule;
+}
 
-  t.closed = true;
-  save();
-  alert("Turnier abgeschlossen. Saisonpunkte berechnet (Demo).");
-});
-
-$("publish").addEventListener("click", ()=>{
-  // Build multi-system public.json
-  const pub = {
-    version: 3,
-    lastUpdated: nowIso(),
-    logoDataUrl: null,
-    systems: {
-      PKM: state.seasons.PKM,
-      YGO: state.seasons.YGO,
-      DT: state.seasons.DT
-    },
-    teams: state.teams
-  };
-  const blob=new Blob([JSON.stringify(pub,null,2)],{type:"application/json"});
+/* Utilities */
+function activeSystem(){ return state.ui.activeSystem || "PKM"; }
+function activeSeasonId(){ return state.ui.activeSeasonIdBySystem[activeSystem()] || null; }
+function firstSeasonId(sys){
+  const s = state.seasons.filter(x=>x.system===sys).sort((a,b)=>b.createdAt-a.createdAt)[0];
+  return s?.id ?? null;
+}
+function activeSeason(){
+  const id=activeSeasonId();
+  return state.seasons.find(s=>s.id===id) || null;
+}
+function activeTournament(){
+  const s=activeSeason();
+  if(!s || s.type!=="SWISS_SERIES") return null;
+  const id=s.activeTournamentId;
+  return s.tournaments.find(t=>t.id===id) || null;
+}
+function renderLogo(){
+  if(state.logoDataUrl){
+    logoImg.src=state.logoDataUrl;
+    logoImg.classList.remove("hide");
+    logoPh.classList.add("hide");
+  } else {
+    logoImg.classList.add("hide");
+    logoPh.classList.remove("hide");
+  }
+}
+function requireAdmin(){ if(!isAdmin) throw new Error("Admin required"); }
+function downloadJson(filename, obj){
+  const blob=new Blob([JSON.stringify(obj,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
   const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="public.json";
-  a.click();
-});
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+function cssEsc(s){ return String(s).replaceAll('"','\\"'); }
+function load(){ try{ const raw=localStorage.getItem(STORAGE_KEY); return raw?JSON.parse(raw):null; }catch{ return null; } }
+function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function seedEmpty(){
+  return {
+    adminPinHash:null,
+    logoDataUrl:null,
+    teams:[],
+    seasons:[],
+    archive:{seasons:[]},
+    ui:{ activeSystem:"PKM", activeSeasonIdBySystem:{PKM:null,YGO:null,DT:null} }
+  };
+}
+function sanitizeAndApply(parsed){
+  if(!parsed || !Array.isArray(parsed.teams) || !Array.isArray(parsed.seasons)) throw new Error("bad");
+  state.adminPinHash = typeof parsed.adminPinHash==="string" ? parsed.adminPinHash : state.adminPinHash;
+  state.logoDataUrl = typeof parsed.logoDataUrl==="string" ? parsed.logoDataUrl : null;
+  state.teams = parsed.teams.map(t=>({id:String(t.id||uid()), name:String(t.name||"").slice(0,80), createdAt:Number(t.createdAt||Date.now())}));
+  state.seasons = parsed.seasons;
+  state.archive = parsed.archive || {seasons:[]};
+  state.ui = parsed.ui || state.ui;
+}
+async function hash(text){
+  const enc = new TextEncoder().encode("ligaapp|" + text);
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function fileToDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(String(r.result));
+    r.onerror=reject;
+    r.readAsDataURL(file);
+  });
+}
 
-render();
+/* boot */
+for(const sys of SYSTEMS){
+  if(!state.ui.activeSeasonIdBySystem[sys]){
+    state.ui.activeSeasonIdBySystem[sys] = firstSeasonId(sys);
+  }
+}
+persist();
+renderAll();
 </script>
 </body>
 </html>
