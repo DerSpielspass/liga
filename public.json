@@ -1,34 +1,19 @@
 {
-  "version": 1,
-  "lastUpdated": "2026-02-16T15:35:35.957Z",
-  "system": "YGO",
-  "season": {
-    "name": "YGO Saison",
-    "tournaments": [
-      {
-        "id": 1771256106526,
-        "players": [
-          {
-            "id": 1771254779981.5146,
-            "name": "Gast 1"
-          },
-          {
-            "id": 1771254783984.1633,
-            "name": "Gast 2"
-          },
-          {
-            "id": 1771254791276.3242,
-            "name": "Gast 3"
-          },
-          {
-            "id": 1771254794740.1204,
-            "name": "Gast 4"
-          }
-        ],
-        "closed": false,
-        "seasonPoints": {}
-      }
-    ],
-    "seasonPoints": {}
+  "version": 4,
+  "lastUpdated": "2026-02-16T15:36:13",
+  "logoDataUrl": null,
+  "systems": {
+    "PKM": {
+      "activeSeason": null,
+      "archive": []
+    },
+    "YGO": {
+      "activeSeason": null,
+      "archive": []
+    },
+    "DT": {
+      "activeSeason": null,
+      "archive": []
+    }
   }
 }
