@@ -277,26 +277,6 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const TV = url.searchParams.get("tv")==="1";
-
-function applyUrlSelection(){
-  try{
-    if(!SYS_PARAM || !systemSel) return;
-    const ok = Array.from(systemSel.options||[]).some(o => o.value===SYS_PARAM);
-    if(ok) systemSel.value = SYS_PARAM;
-    if(typeof buildSeasonSelector==="function") buildSeasonSelector();
-    if(seasonSel && seasonSel.options && seasonSel.options.length){
-      if(SEASON_PARAM){
-        const opt = Array.from(seasonSel.options).find(o => (o.textContent||"").trim()===SEASON_PARAM);
-        if(opt) seasonSel.value = opt.value;
-        else seasonSel.selectedIndex = 0;
-      } else {
-        seasonSel.selectedIndex = 0;
-      }
-    }
-  }catch(e){}
-}
-
-
 if(TV) document.documentElement.classList.add("tv");
 if(TV){
   // TV: standardmäßig Paarungen anzeigen
@@ -329,9 +309,7 @@ async function loadPublic(){
     standPill.textContent = "Stand: " + (lastUpdated ? parseTime(lastUpdated) : "—");
     renderLogo();
     buildSelectors();
-  applyUrlSelection();
-    applyUrlSelection();
-  renderCurrent();
+    renderCurrent();
     subtitle.textContent = "Daten geladen.";
     return true;
   }catch(err){
@@ -377,17 +355,6 @@ function buildSelectors(){
   }
 
   const season = getSelectedSeason();
-  // --- TV Kontextanzeige (stabil & direkt) ---
-  if(TV && subtitle){
-    try{
-      const sys = systemSel && systemSel.value ? systemSel.value : "";
-      const sname = season && season.name ? season.name : "";
-      const base = "Daten geladen.";
-      subtitle.textContent = base
-        + (sys ? " · " + sys : "")
-        + (sname ? " · " + sname : "");
-    }catch(e){}
-  }
   if(season && season.type==="SWISS_SERIES"){
     tournamentWrap.classList.remove("hide");
     viewSel.querySelector('option[value="seasonpoints"]').disabled = false;
@@ -437,17 +404,6 @@ function chooseTvTournamentAndRound(season){
 
 function buildRoundSelector(){
   const season = getSelectedSeason();
-  // --- TV Kontextanzeige (stabil & direkt) ---
-  if(TV && subtitle){
-    try{
-      const sys = systemSel && systemSel.value ? systemSel.value : "";
-      const sname = season && season.name ? season.name : "";
-      const base = "Daten geladen.";
-      subtitle.textContent = base
-        + (sys ? " · " + sys : "")
-        + (sname ? " · " + sname : "");
-    }catch(e){}
-  }
   if(!season){ roundSel.innerHTML = `<option value="">(—)</option>`; return; }
   if(season.type==="SWISS_SERIES"){
     const t = getSelectedTournament(season);
@@ -474,24 +430,12 @@ function buildRoundSelector(){
   } else roundSel.innerHTML = `<option value="">(—)</option>`;
 }
 function getSelectedSeason(){
-  const sys = activeSystem();
-  const d = getSysData(sys);
-  if(!d) return null;
-  const seasons = d.seasons ? d.seasons : (d.season ? [d.season] : []);
-  if(!seasons.length) return null;
-  // URL: saison nach Name auswählen
-  if(SEASON_PARAM){
-    const byName = seasons.find(s => (s.name||'')===SEASON_PARAM);
-    if(byName) return byName;
-  }
-  // UI-Auswahl, falls vorhanden
-  if(seasonSel && seasonSel.value){
-    const byId = seasons.find(s => String(s.id)===String(seasonSel.value));
-    if(byId) return byId;
-  }
-  return seasons[0];
+  const sys = systemSel.value || "PKM";
+  const sysData = systems()[sys] || {};
+  const id = seasonSel.value;
+  if(sysData.activeSeason && sysData.activeSeason.id===id) return sysData.activeSeason;
+  return (sysData.archive||[]).find(s=>s.id===id) || null;
 }
-
 function getSelectedTournament(season){
   const tid = tournamentSel.value;
   return (season.tournaments||[]).find(t=>t.id===tid) || null;
@@ -536,17 +480,6 @@ function computeStandings(players, matches, scoring){
 
 function renderCurrent(){
   const season = getSelectedSeason();
-  // --- TV Kontextanzeige (stabil & direkt) ---
-  if(TV && subtitle){
-    try{
-      const sys = systemSel && systemSel.value ? systemSel.value : "";
-      const sname = season && season.name ? season.name : "";
-      const base = "Daten geladen.";
-      subtitle.textContent = base
-        + (sys ? " · " + sys : "")
-        + (sname ? " · " + sname : "");
-    }catch(e){}
-  }
   const sys = systemSel.value || "PKM";
   if(!season){
     subtitle.textContent="Keine Saison.";
@@ -679,10 +612,8 @@ function countTournaments(season,id){
 }
 
 /* events */
-systemSel.addEventListener("change", ()=>{ buildSelectors();
-  applyUrlSelection(); renderCurrent(); });
-seasonSel.addEventListener("change", ()=>{ buildSelectors();
-  applyUrlSelection(); renderCurrent(); });
+systemSel.addEventListener("change", ()=>{ buildSelectors(); renderCurrent(); });
+seasonSel.addEventListener("change", ()=>{ buildSelectors(); renderCurrent(); });
 tournamentSel.addEventListener("change", ()=>{ buildRoundSelector(); renderCurrent(); });
 roundSel.addEventListener("change", renderCurrent);
 viewSel.addEventListener("change", ()=>{ setView(viewSel.value); renderCurrent(); });
@@ -701,8 +632,7 @@ async function tick(){
         if(j?.lastUpdated && j.lastUpdated !== lastUpdated){
           pub=j; lastUpdated=j.lastUpdated;
           standPill.textContent = "Stand: " + parseTime(lastUpdated);
-          renderLogo(); buildSelectors();
-  applyUrlSelection(); renderCurrent();
+          renderLogo(); buildSelectors(); renderCurrent();
         } else if(j?.lastUpdated){
           standPill.textContent = "Stand: " + parseTime(j.lastUpdated);
         }
