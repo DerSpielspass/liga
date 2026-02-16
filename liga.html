@@ -209,6 +209,12 @@ let lastUpdated=null;
 const url=new URL(location.href);
 const TV = url.searchParams.get("tv")==="1";
 if(TV) document.documentElement.classList.add("tv");
+
+if(TV){
+  // Im TV-Modus wollen wir standardmäßig Paarungen anzeigen.
+  try{ viewSel.value = "round"; }catch(e){}
+}
+
 modePill.textContent = "Modus: " + (TV ? "TV" : "Normal");
 
 function setView(name){
@@ -291,6 +297,11 @@ function buildRoundSelector(){
     if(!t){ roundSel.innerHTML=`<option value="">(—)</option>`; return; }
     const rounds = [].concat(t.roundsClosed||[]).concat(t.roundOpen?[t.roundOpen]:[]);
     const sorted = rounds.slice().sort((a,b)=>a.no-b.no);
+    // TV: bevorzugt offene Runde, damit Paarungen sichtbar sind
+    if(TV){
+      const openR = sorted.find(x=>x.status!=="CLOSED");
+      if(openR) roundSel.value = String(openR.no);
+    }
     roundSel.innerHTML = sorted.length
       ? sorted.map(r=>`<option value="${r.no}">Runde ${r.no}${r.status==="CLOSED"?" ✓":""}</option>`).join("")
       : `<option value="">(keine Runde)</option>`;
@@ -362,6 +373,7 @@ function renderCurrent(){
     return;
   }
   subtitle.textContent = `${sys} · ${season.name}`;
+  if(TV){ viewSel.value = "round"; }
   setView(viewSel.value || "table");
 
   if(season.type==="SWISS_SERIES"){
