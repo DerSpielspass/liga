@@ -50,7 +50,9 @@
     .tv h2{font-size:18px}
     .tv th,.tv td{font-size:16px}
     .tv .item b{font-size:16px}
-  </style>
+  
+.ctxTag{display:inline-block;margin-left:10px;padding:6px 10px;border-radius:999px;font-size:14px;font-weight:700;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);vertical-align:middle}
+</style>
 
 <style>
 /* === Der Spielspass TV-Design === */
@@ -129,7 +131,7 @@
         <div id="logoPh" class="muted" style="font-size:12px;">Logo</div>
       </div>
       <div>
-        <h1>🏆 Liga-Stand</h1>
+        <h1>🏆 Liga-Stand <span id="ctxTag" class="ctxTag"></span></h1>
         <div class="muted" id="subtitle">Lade Daten…</div>
       </div>
     </div>
@@ -488,8 +490,12 @@ function renderCurrent(){
     return;
   }
   subtitle.textContent = `${sys} · ${season.name}`;
+  // TV/Normal: Kontext auch direkt im Titel anzeigen (robust gegen Cache/Timing)
+  try{ const t=document.getElementById("ctxTag"); if(t) t.textContent = `${sys} · ${season.name}`; }catch(e){}
+
   if(TV){ viewSel.value = "round"; }
   if(TV){ viewSel.value = "round"; }
+  try{ if(TV){ subtitle.textContent = `${sys} · ${season.name}`; } }catch(e){}
   setView(viewSel.value || "table");
 
   if(season.type==="SWISS_SERIES"){
