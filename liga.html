@@ -1,108 +1,508 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Liga Anzeige (v3)</title>
-<style>
-  body{font-family:system-ui,Arial;margin:20px;background:#0f1220;color:#e9ecff}
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
-  .card{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);padding:12px;border-radius:12px;margin:12px 0}
-  label{display:block;font-size:12px;opacity:.8;margin:0 0 6px}
-  select,button{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e9ecff}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{border-bottom:1px solid rgba(255,255,255,.12);padding:8px;text-align:left}
-  th{opacity:.8;font-size:12px}
-  .right{text-align:right}
-  .muted{opacity:.75;font-size:12px}
-  .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-size:12px;opacity:.9}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Liga Anzeige v4 (PKM / YGO / DT)</title>
+  <style>
+    :root{--bg:#0b1220;--card:#121b2e;--text:#e8eefc;--muted:#a9b7da;--acc:#7aa2ff;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;background:linear-gradient(180deg,#070b14,var(--bg));color:var(--text)}
+    header{position:sticky;top:0;z-index:10;background:rgba(7,11,20,.78);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.08);padding:14px 16px}
+    main{max-width:1300px;margin:0 auto;padding:16px 16px 60px;display:grid;gap:14px}
+    .card{background:rgba(18,27,46,.92);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .split{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+    h1{margin:0;font-size:18px}
+    h2{margin:0 0 10px;font-size:15px}
+    label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+    select,button{border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--text);padding:10px;outline:none}
+    button{cursor:pointer;border-color:rgba(122,162,255,.35);background:rgba(122,162,255,.18);font-weight:650}
+    button:hover{background:rgba(122,162,255,.26)}
+    .muted{color:var(--muted)}
+    .pill{display:inline-flex;gap:6px;align-items:center;padding:4px 8px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.12);color:var(--muted)}
+    .hide{display:none !important}
+    table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden}
+    th,td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px;text-align:left;vertical-align:top}
+    th{color:var(--muted);font-weight:650}
+    .right{text-align:right}
+    .list{display:grid;gap:8px}
+    .item{display:flex;justify-content:space-between;gap:10px;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+    .item b{font-size:13px}
+    .item .meta{color:var(--muted);font-size:12px;margin-top:3px}
+    .logoBox{width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);display:grid;place-items:center;overflow:hidden}
+    .logoBox img{width:100%;height:100%;object-fit:cover;display:block}
+    .printOnly{display:none}
+    @media print{
+      body{background:#fff;color:#000}
+      header,.noPrint{display:none !important}
+      .card{box-shadow:none;border:0;background:#fff}
+      .printOnly{display:block}
+      .muted{color:#333}
+      table th{color:#333}
+      table th,table td{border-bottom:1px solid #ddd}
+      .item{border:1px solid #ddd;background:#fff}
+      a{color:#000}
+    }
+    .tv main{max-width:1600px}
+    .tv .card{padding:18px}
+    .tv h1{font-size:22px}
+    .tv h2{font-size:18px}
+    .tv th,.tv td{font-size:16px}
+    .tv .item b{font-size:16px}
+  </style>
 </head>
 <body>
-<h1>🏆 Liga Anzeige (v3)</h1>
-
-<div class="row">
-  <span class="pill" id="stand">Stand: —</span>
-</div>
-
-<div class="card">
-  <div class="row">
-    <div>
-      <label>System</label>
-      <select id="sys">
-        <option value="PKM">PKM</option>
-        <option value="YGO">YGO</option>
-        <option value="DT">DT</option>
-      </select>
+<header class="noPrint">
+  <div class="split">
+    <div class="row" style="align-items:center;">
+      <div class="logoBox" title="Logo">
+        <img id="logoImg" class="hide" alt="Logo" />
+        <div id="logoPh" class="muted" style="font-size:12px;">Logo</div>
+      </div>
+      <div>
+        <h1>🏆 Liga-Stand</h1>
+        <div class="muted" id="subtitle">Lade Daten…</div>
+      </div>
     </div>
-    <button id="reload">Neu laden</button>
-    <span class="muted">TV-Modus: <code>?tv=1</code> (Auto-Reload 60s)</span>
+    <div class="row">
+      <span class="pill" id="standPill">Stand: —</span>
+      <span class="pill" id="modePill">Modus: —</span>
+    </div>
   </div>
-  <div class="muted" id="seasonName" style="margin-top:8px">—</div>
-</div>
+</header>
 
-<div class="card">
-  <h3>Saisonwertung (Swiss Demo)</h3>
-  <div class="muted">In v3 werden Saisonpunkte angezeigt, sobald im Admin veröffentlicht wurde.</div>
-  <div style="overflow:auto">
-    <table>
-      <thead><tr><th>#</th><th>Nickname</th><th class="right">Turniere</th><th class="right">Saisonpkt</th></tr></thead>
-      <tbody id="body"></tbody>
-    </table>
+<main>
+  <div class="card noPrint">
+    <div class="row">
+      <div style="width:160px;">
+        <label>System</label>
+        <select id="systemSel">
+          <option value="PKM">PKM</option>
+          <option value="YGO">YGO</option>
+          <option value="DT">DT</option>
+        </select>
+      </div>
+      <div style="min-width:260px;flex:1;">
+        <label>Saison</label>
+        <select id="seasonSel"></select>
+      </div>
+      <div style="min-width:260px;flex:1;" id="tournamentWrap">
+        <label>Turnier (Swiss)</label>
+        <select id="tournamentSel"></select>
+      </div>
+      <div style="width:200px;">
+        <label>Runde</label>
+        <select id="roundSel"></select>
+      </div>
+      <div style="width:170px;">
+        <label>Ansicht</label>
+        <select id="viewSel">
+          <option value="table">Tabelle</option>
+          <option value="round">Rundenansicht</option>
+          <option value="fixtures">Spielplan</option>
+          <option value="results">Ergebnisse</option>
+          <option value="seasonpoints">Saisonwertung (Swiss)</option>
+        </select>
+      </div>
+      <button id="printBtn">Drucken</button>
+    </div>
+    <div class="muted" style="font-size:12px;margin-top:8px;">Bitte Nicknames verwenden (öffentlich).</div>
   </div>
-</div>
+
+  <div class="card" id="contentCard">
+    <div class="printOnly">
+      <h2 id="printTitle">Runde</h2>
+      <div class="muted" id="printSub">—</div>
+      <hr />
+    </div>
+
+    <div id="view_table">
+      <h2>Tabelle</h2>
+      <div class="muted" style="font-size:12px;margin-bottom:8px;">
+        Tiebreaker: Punkte → Gegnerpunkte → Gegner-der-Gegner-Punkte → Name
+      </div>
+      <div style="overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Nickname</th>
+              <th class="right">Sp</th><th class="right">S</th><th class="right">U</th><th class="right">N</th>
+              <th class="right">Pkt</th><th class="right">OppPkt</th><th class="right">OppOppPkt</th>
+            </tr>
+          </thead>
+          <tbody id="standingsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="view_round" class="hide">
+      <h2>Rundenansicht</h2>
+      <div class="muted" style="font-size:12px;margin-bottom:8px;">Ideal zum Drucken & als Anzeige im Laden.</div>
+      <div class="list" id="roundList"></div>
+    </div>
+
+    <div id="view_fixtures" class="hide">
+      <h2>Spielplan</h2>
+      <div class="muted" style="font-size:12px;margin-bottom:8px;">Offene Spiele (Scores erst nach Abschluss sichtbar).</div>
+      <div class="list" id="fixtureList"></div>
+    </div>
+
+    <div id="view_results" class="hide">
+      <h2>Ergebnisse</h2>
+      <div class="muted" style="font-size:12px;margin-bottom:8px;">Nur veröffentlichte Ergebnisse.</div>
+      <div class="list" id="resultList"></div>
+    </div>
+
+    <div id="view_seasonpoints" class="hide">
+      <h2>Saisonwertung (Swiss)</h2>
+      <div class="muted" style="font-size:12px;margin-bottom:8px;">Saisonpunkte aus abgeschlossenen Turnieren (1 Nachkommastelle).</div>
+      <div style="overflow:auto;">
+        <table>
+          <thead><tr><th>#</th><th>Nickname</th><th class="right">Turniere</th><th class="right">Saisonpkt</th></tr></thead>
+          <tbody id="seasonPointsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="view_error" class="hide">
+      <h2>Daten konnten nicht geladen werden</h2>
+      <div class="muted" style="font-size:12px;">
+        Dieses Frontend lädt <b>public.json</b> per <code>fetch()</code>.<br/>
+        Wenn du die Datei lokal per Doppelklick öffnest, kann der Browser das Laden blockieren.
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:8px;">Debug: <span id="errText"></span></div>
+    </div>
+  </div>
+</main>
 
 <script>
-const $=id=>document.getElementById(id);
-const url=new URL(location.href);
-const TV=url.searchParams.get("tv")==="1";
+const $=(id)=>document.getElementById(id);
+const esc=(s)=>String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+
+const systemSel=$("systemSel");
+const seasonSel=$("seasonSel");
+const tournamentSel=$("tournamentSel");
+const tournamentWrap=$("tournamentWrap");
+const roundSel=$("roundSel");
+const viewSel=$("viewSel");
+const printBtn=$("printBtn");
+
+const logoImg=$("logoImg");
+const logoPh=$("logoPh");
+const subtitle=$("subtitle");
+const standPill=$("standPill");
+const modePill=$("modePill");
+
+const standingsBody=$("standingsBody");
+const roundList=$("roundList");
+const fixtureList=$("fixtureList");
+const resultList=$("resultList");
+const seasonPointsBody=$("seasonPointsBody");
+
+const printTitle=$("printTitle");
+const printSub=$("printSub");
 
 let pub=null;
+let lastUpdated=null;
 
-function round1(x){return Math.round(x*10)/10;}
+const url=new URL(location.href);
+const TV = url.searchParams.get("tv")==="1";
+if(TV) document.documentElement.classList.add("tv");
+modePill.textContent = "Modus: " + (TV ? "TV" : "Normal");
 
-async function load(){
+function setView(name){
+  ["table","round","fixtures","results","seasonpoints","error"].forEach(v=>{
+    $("view_"+v).classList.toggle("hide", v!==name);
+  });
+}
+function parseTime(iso){
+  try{ return new Date(iso).toLocaleString("de-DE",{dateStyle:"medium",timeStyle:"short"}); }
+  catch{ return iso; }
+}
+async function loadPublic(){
   try{
     const res = await fetch("public.json?ts="+Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error("HTTP "+res.status);
     pub = await res.json();
-    $("stand").textContent = "Stand: " + new Date(pub.lastUpdated||Date.now()).toLocaleString("de-DE");
-    render();
-  }catch(e){
-    $("seasonName").textContent = "public.json konnte nicht geladen werden.";
-    $("body").innerHTML = `<tr><td colspan="4" class="muted">Fehler.</td></tr>`;
+    lastUpdated = pub?.lastUpdated || null;
+    standPill.textContent = "Stand: " + (lastUpdated ? parseTime(lastUpdated) : "—");
+    renderLogo();
+    buildSelectors();
+    renderCurrent();
+    subtitle.textContent = "Daten geladen.";
+    return true;
+  }catch(err){
+    setView("error");
+    $("errText").textContent = String(err);
+    subtitle.textContent = "Fehler beim Laden.";
+    return false;
   }
 }
+function renderLogo(){
+  if(pub?.logoDataUrl){
+    logoImg.src = pub.logoDataUrl;
+    logoImg.classList.remove("hide");
+    logoPh.classList.add("hide");
+  } else {
+    logoImg.classList.add("hide");
+    logoPh.classList.remove("hide");
+  }
+}
+function systems(){ return pub?.systems || {}; }
 
-function render(){
-  const sys=$("sys").value;
-  const s = pub?.systems?.[sys] || null;
-  if(!s){
-    $("seasonName").textContent = sys + " · Keine Saison";
-    $("body").innerHTML = `<tr><td colspan="4" class="muted">Keine Saison.</td></tr>`;
+function buildSelectors(){
+  const sys = systemSel.value || "PKM";
+  const sysData = systems()[sys] || {};
+  const seasons = [];
+  if(sysData.activeSeason) seasons.push({kind:"active", ...sysData.activeSeason});
+  for(const s of (sysData.archive||[])) seasons.push({kind:"arch", ...s});
+
+  seasonSel.innerHTML = seasons.length
+    ? seasons.map(s=>`<option value="${esc(s.id)}">${esc(s.kind==="active" ? ("Aktiv: "+s.name) : ("Archiv: "+s.name))}</option>`).join("")
+    : `<option value="">(keine Saison)</option>`;
+
+  if(seasonSel.value===""){
+    if(sysData.activeSeason) seasonSel.value = sysData.activeSeason.id;
+  }
+
+  const season = getSelectedSeason();
+  if(season && season.type==="SWISS_SERIES"){
+    tournamentWrap.classList.remove("hide");
+    viewSel.querySelector('option[value="seasonpoints"]').disabled = false;
+
+    const ts = (season.tournaments||[]);
+    tournamentSel.innerHTML = ts.length
+      ? ts.map(t=>`<option value="${esc(t.id)}">${esc(t.name)}${t.status==="CLOSED"?" ✓":""}</option>`).join("")
+      : `<option value="">(kein Turnier)</option>`;
+    if(!tournamentSel.value && ts[0]) tournamentSel.value = ts[0].id;
+  } else {
+    tournamentWrap.classList.add("hide");
+    viewSel.querySelector('option[value="seasonpoints"]').disabled = true;
+    tournamentSel.innerHTML = `<option value="">(—)</option>`;
+  }
+  buildRoundSelector();
+}
+function buildRoundSelector(){
+  const season = getSelectedSeason();
+  if(!season){ roundSel.innerHTML = `<option value="">(—)</option>`; return; }
+  if(season.type==="SWISS_SERIES"){
+    const t = getSelectedTournament(season);
+    if(!t){ roundSel.innerHTML=`<option value="">(—)</option>`; return; }
+    const rounds = [].concat(t.roundsClosed||[]).concat(t.roundOpen?[t.roundOpen]:[]);
+    const sorted = rounds.slice().sort((a,b)=>a.no-b.no);
+    roundSel.innerHTML = sorted.length
+      ? sorted.map(r=>`<option value="${r.no}">Runde ${r.no}${r.status==="CLOSED"?" ✓":""}</option>`).join("")
+      : `<option value="">(keine Runde)</option>`;
+    if(!roundSel.value && sorted[0]) roundSel.value = String(sorted[0].no);
+  } else if(season.type==="RR"){
+    const rounds = (season.rounds||[]).slice().sort((a,b)=>a.no-b.no);
+    roundSel.innerHTML = rounds.length
+      ? rounds.map(r=>`<option value="${r.no}">Spieltag ${r.no}${r.confirmed?" ✓":""}</option>`).join("")
+      : `<option value="">(kein Spielplan)</option>`;
+    if(!roundSel.value && rounds[0]) roundSel.value = String(rounds[0].no);
+  } else roundSel.innerHTML = `<option value="">(—)</option>`;
+}
+function getSelectedSeason(){
+  const sys = systemSel.value || "PKM";
+  const sysData = systems()[sys] || {};
+  const id = seasonSel.value;
+  if(sysData.activeSeason && sysData.activeSeason.id===id) return sysData.activeSeason;
+  return (sysData.archive||[]).find(s=>s.id===id) || null;
+}
+function getSelectedTournament(season){
+  const tid = tournamentSel.value;
+  return (season.tournaments||[]).find(t=>t.id===tid) || null;
+}
+function setPrintHeader(title, sub){ printTitle.textContent=title; printSub.textContent=sub; }
+
+/* standings calculator for public matches */
+function computeStandings(players, matches, scoring){
+  const rows = new Map(players.map(p=>[p.id,{
+    id:p.id,name:p.name,played:0,wins:0,draws:0,losses:0,pts:0, opponents:new Set()
+  }]));
+  for(const m of matches){
+    if(m.b===null){
+      const a=rows.get(m.a.id); if(!a) continue;
+      a.played++; a.wins++; a.pts += scoring.win;
+      continue;
+    }
+    const a=rows.get(m.a.id), b=rows.get(m.b.id);
+    if(!a||!b) continue;
+    a.played++; b.played++;
+    a.opponents.add(b.id); b.opponents.add(a.id);
+    if(m.resultType==="DOUBLE_LOSS"){ a.losses++; b.losses++; continue; }
+    if(m.aScore===null||m.bScore===null) continue;
+    if(m.aScore>m.bScore){ a.wins++; b.losses++; a.pts+=scoring.win; }
+    else if(m.aScore<m.bScore){ b.wins++; a.losses++; b.pts+=scoring.win; }
+    else { a.draws++; b.draws++; a.pts+=scoring.draw; b.pts+=scoring.draw; }
+  }
+  const oppPts=new Map();
+  for(const r of rows.values()){
+    let sum=0; for(const oid of r.opponents) sum += rows.get(oid)?.pts ?? 0;
+    oppPts.set(r.id,sum);
+  }
+  const oppOpp=new Map();
+  for(const r of rows.values()){
+    let sum=0; for(const oid of r.opponents) sum += oppPts.get(oid) ?? 0;
+    oppOpp.set(r.id,sum);
+  }
+  const arr=[...rows.values()].map(r=>({...r, opp:oppPts.get(r.id)||0, oppopp:oppOpp.get(r.id)||0}));
+  arr.sort((a,b)=>(b.pts-a.pts)||(b.opp-a.opp)||(b.oppopp-a.oppopp)||a.name.localeCompare(b.name,"de"));
+  return arr;
+}
+
+function renderCurrent(){
+  const season = getSelectedSeason();
+  const sys = systemSel.value || "PKM";
+  if(!season){
+    subtitle.textContent="Keine Saison.";
+    standingsBody.innerHTML = `<tr><td colspan="9" class="muted">Keine Daten.</td></tr>`;
+    setView("table");
     return;
   }
-  $("seasonName").textContent = sys + " · " + s.name;
+  subtitle.textContent = `${sys} · ${season.name}`;
+  setView(viewSel.value || "table");
 
-  const teams = pub.teams||[];
-  const rows = teams.map(t=>({
-    name:t.name,
-    pts:Number(s.seasonPointsById?.[t.id]||0),
-    played:Number(s.tournamentsPlayedById?.[t.id]||0)
-  })).filter(r=>r.played>0 || r.pts>0);
+  if(season.type==="SWISS_SERIES"){
+    const t = getSelectedTournament(season);
+    if(!t){
+      standingsBody.innerHTML = `<tr><td colspan="9" class="muted">Kein Turnier.</td></tr>`;
+      fixtureList.innerHTML = `<div class="muted">—</div>`;
+      resultList.innerHTML = `<div class="muted">—</div>`;
+      roundList.innerHTML = `<div class="muted">—</div>`;
+      seasonPointsBody.innerHTML = `<tr><td colspan="4" class="muted">—</td></tr>`;
+      return;
+    }
+    const scoring = season.settings?.scoring || {win:3,draw:1,loss:0};
+    const players = (t.players||[]);
+    const closedRounds = t.roundsClosed || [];
+    const matchesForStandings = closedRounds.flatMap(r=>r.matches.map(m=>({a:m.a,b:m.b,aScore:m.aScore,bScore:m.bScore,resultType:m.resultType})));
+    const standings = computeStandings(players, matchesForStandings, scoring);
 
-  rows.sort((a,b)=>(b.pts-a.pts)||(b.played-a.played)||a.name.localeCompare(b.name,"de"));
-  $("body").innerHTML = rows.length ? rows.map((r,i)=>`
-    <tr><td>${i+1}</td><td><b>${r.name}</b></td><td class="right">${r.played}</td><td class="right"><b>${r.pts.toFixed(1)}</b></td></tr>
-  `).join("") : `<tr><td colspan="4" class="muted">Noch keine Saisonpunkte.</td></tr>`;
+    standingsBody.innerHTML = standings.length ? standings.map((r,i)=>`
+      <tr>
+        <td>${i+1}</td><td><b>${esc(r.name)}</b></td>
+        <td class="right">${r.played}</td><td class="right">${r.wins}</td><td class="right">${r.draws}</td><td class="right">${r.losses}</td>
+        <td class="right"><b>${r.pts}</b></td><td class="right">${r.opp}</td><td class="right">${r.oppopp}</td>
+      </tr>
+    `).join("") : `<tr><td colspan="9" class="muted">Noch keine abgeschlossene Runde.</td></tr>`;
+
+    const selectedR = parseInt(roundSel.value,10);
+    const allRounds = [].concat(closedRounds).concat(t.roundOpen?[t.roundOpen]:[]);
+    const r = allRounds.find(x=>x.no===selectedR) || allRounds[0] || null;
+    if(r){
+      setPrintHeader(`${sys} · ${season.name} · ${t.name} · Runde ${r.no}`, `Stand: ${parseTime(pub.lastUpdated||"")}`);
+      roundList.innerHTML = r.matches.slice().sort((a,b)=>(a.tableNo??9999)-(b.tableNo??9999)).map(m=>{
+        const bname = m.b ? m.b.name : "BYE";
+        const score = (m.aScore===null||m.bScore===null) ? "TBD" : `${m.aScore} : ${m.bScore}`;
+        const showScore = (r.status==="CLOSED" ? ` <span class="muted">(${esc(score)})</span>` : ` <span class="muted">(TBD)</span>`);
+        return `<div class="item"><div><b>Tisch ${m.tableNo ?? "—"} · ${esc(m.a.name)} – ${esc(bname)}${showScore}</b><div class="meta">${m.note?esc(m.note):(r.status==="CLOSED"?"Ergebnis veröffentlicht":"Ergebnis folgt nach Rundenabschluss")}</div></div></div>`;
+      }).join("");
+    } else roundList.innerHTML = `<div class="muted">Keine Runde.</div>`;
+
+    const open = t.roundOpen;
+    const fixtures = open ? open.matches : [];
+    fixtureList.innerHTML = fixtures.length ? fixtures.map(m=>{
+      const bname = m.b ? m.b.name : "BYE";
+      return `<div class="item"><div><b>Tisch ${m.tableNo ?? "—"} · ${esc(m.a.name)} – ${esc(bname)}</b><div class="meta">${m.note?esc(m.note):"Offen"}</div></div></div>`;
+    }).join("") : `<div class="muted">Keine offene Runde.</div>`;
+
+    const results = closedRounds.flatMap(r=>r.matches.map(m=>({rno:r.no, ...m})));
+    resultList.innerHTML = results.length ? results.slice().sort((a,b)=>(b.rno-a.rno) || ((a.tableNo??999)-(b.tableNo??999))).map(m=>{
+      const bname = m.b ? m.b.name : "BYE";
+      const score = (m.aScore===null||m.bScore===null) ? "—" : `${m.aScore} : ${m.bScore}`;
+      return `<div class="item"><div><b>R${m.rno} · Tisch ${m.tableNo ?? "—"} · ${esc(m.a.name)} – ${esc(bname)} <span class="muted">(${esc(score)})</span></b><div class="meta">${m.note?esc(m.note):"Veröffentlicht"}</div></div></div>`;
+    }).join("") : `<div class="muted">Noch keine veröffentlichten Ergebnisse.</div>`;
+
+    const sp = season.seasonPointsByTeamId || {};
+    const playersSet = new Set();
+    for(const t2 of (season.tournaments||[])) for(const p of (t2.players||[])) playersSet.add(p.id);
+    const rows = [...playersSet].map(id=>({id, name: findName(season,id), pts:Number(sp[id]||0), tournaments: countTournaments(season,id)}));
+    rows.sort((a,b)=>(b.pts-a.pts)||(b.tournaments-a.tournaments)||a.name.localeCompare(b.name,"de"));
+    seasonPointsBody.innerHTML = rows.length ? rows.map((r,i)=>`
+      <tr><td>${i+1}</td><td><b>${esc(r.name)}</b></td><td class="right">${r.tournaments}</td><td class="right"><b>${r.pts.toFixed(1)}</b></td></tr>
+    `).join("") : `<tr><td colspan="4" class="muted">Noch keine Saisonpunkte (erst nach Turnierabschluss).</td></tr>`;
+    return;
+  }
+
+  if(season.type==="RR"){
+    const scoring = season.settings?.scoring || {win:3,draw:1,loss:0};
+    const players = season.roster || [];
+    const confirmed = (season.rounds||[]).filter(r=>r.confirmed).flatMap(r=>r.matches.map(m=>({a:m.a,b:m.b,aScore:m.aScore,bScore:m.bScore,resultType:"NORMAL"})));
+    const standings = computeStandings(players, confirmed, scoring);
+    standingsBody.innerHTML = standings.length ? standings.map((r,i)=>`
+      <tr><td>${i+1}</td><td><b>${esc(r.name)}</b></td>
+        <td class="right">${r.played}</td><td class="right">${r.wins}</td><td class="right">${r.draws}</td><td class="right">${r.losses}</td>
+        <td class="right"><b>${r.pts}</b></td><td class="right">${r.opp}</td><td class="right">${r.oppopp}</td></tr>
+    `).join("") : `<tr><td colspan="9" class="muted">Noch keine bestätigten Spieltage.</td></tr>`;
+
+    const rno=parseInt(roundSel.value,10);
+    const r=(season.rounds||[]).find(x=>x.no===rno) || (season.rounds||[])[0] || null;
+    if(r){
+      setPrintHeader(`${sys} · ${season.name} · Spieltag ${r.no}`, `Stand: ${parseTime(pub.lastUpdated||"")}`);
+      roundList.innerHTML = r.matches.map(m=>{
+        const score=(r.confirmed && m.aScore!==null && m.bScore!==null)?`${m.aScore} : ${m.bScore}`:"TBD";
+        const show=r.confirmed?` <span class="muted">(${esc(score)})</span>`:` <span class="muted">(TBD)</span>`;
+        return `<div class="item"><div><b>Tisch ${m.tableNo ?? "—"} · ${esc(m.a.name)} – ${esc(m.b.name)}${show}</b><div class="meta">${m.note?esc(m.note):(r.confirmed?"Ergebnis veröffentlicht":"Ergebnis folgt nach Bestätigung")}</div></div></div>`;
+      }).join("");
+      const open=(season.rounds||[]).find(x=>!x.confirmed);
+      fixtureList.innerHTML = open ? open.matches.map(m=>`<div class="item"><div><b>Spieltag ${open.no} · Tisch ${m.tableNo ?? "—"} · ${esc(m.a.name)} – ${esc(m.b.name)}</b><div class="meta">Offen</div></div></div>`).join("") : `<div class="muted">Kein offener Spieltag.</div>`;
+      const results=(season.rounds||[]).filter(x=>x.confirmed).flatMap(x=>x.matches.map(m=>({rno:x.no,...m})));
+      resultList.innerHTML = results.length ? results.map(m=>`<div class="item"><div><b>Spieltag ${m.rno} · Tisch ${m.tableNo ?? "—"} · ${esc(m.a.name)} – ${esc(m.b.name)} <span class="muted">(${esc(m.aScore)} : ${esc(m.bScore)})</span></b><div class="meta">${m.note?esc(m.note):"Veröffentlicht"}</div></div></div>`).join("") : `<div class="muted">Noch keine bestätigten Ergebnisse.</div>`;
+    } else {
+      roundList.innerHTML=`<div class="muted">Kein Spieltag.</div>`;
+      fixtureList.innerHTML=`<div class="muted">—</div>`;
+      resultList.innerHTML=`<div class="muted">—</div>`;
+    }
+    if(viewSel.value==="seasonpoints") viewSel.value="table";
+    return;
+  }
 }
 
-$("sys").addEventListener("change", render);
-$("reload").addEventListener("click", load);
-
-load();
-if(TV){
-  setInterval(load, 60000);
+function findName(season,id){
+  for(const t of (season.tournaments||[])){
+    const p=(t.players||[]).find(x=>x.id===id);
+    if(p) return p.name;
+  }
+  return "Unbekannt";
 }
+function countTournaments(season,id){
+  let c=0;
+  for(const t of (season.tournaments||[])) if((t.players||[]).some(p=>p.id===id)) c++;
+  return c;
+}
+
+/* events */
+systemSel.addEventListener("change", ()=>{ buildSelectors(); renderCurrent(); });
+seasonSel.addEventListener("change", ()=>{ buildSelectors(); renderCurrent(); });
+tournamentSel.addEventListener("change", ()=>{ buildRoundSelector(); renderCurrent(); });
+roundSel.addEventListener("change", renderCurrent);
+viewSel.addEventListener("change", ()=>{ setView(viewSel.value); renderCurrent(); });
+printBtn.addEventListener("click", ()=>window.print());
+
+/* auto refresh in TV */
+async function tick(){
+  const ok = await loadPublic();
+  if(!ok) return;
+  if(TV){
+    setInterval(async ()=>{
+      try{
+        const res = await fetch("public.json?ts="+Date.now(), {cache:"no-store"});
+        if(!res.ok) return;
+        const j = await res.json();
+        if(j?.lastUpdated && j.lastUpdated !== lastUpdated){
+          pub=j; lastUpdated=j.lastUpdated;
+          standPill.textContent = "Stand: " + parseTime(lastUpdated);
+          renderLogo(); buildSelectors(); renderCurrent();
+        } else if(j?.lastUpdated){
+          standPill.textContent = "Stand: " + parseTime(j.lastUpdated);
+        }
+      }catch{}
+    }, 60000);
+  }
+}
+tick();
 </script>
 </body>
 </html>
