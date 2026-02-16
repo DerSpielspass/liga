@@ -1141,20 +1141,20 @@ function renderRRRoundEditor(rno){
           <div><b>Tisch ${m.tableNo ?? "—"} · ${esc(a)} – ${esc(b)}</b></div>
           <div class="muted small">${r.confirmed ? "Bestätigt" : (isMatchDecided(m) ? "Entschieden" : "Offen")}</div>
         </div>
-        <div class="row">
-          <div style="width:120px;">
+        <div class="matchGrid">
+          <div>
             <label>A</label>
             <input data-rra="${esc(m.id)}" type="number" min="0" value="${m.aScore===null?"":m.aScore}" ${canEdit?"":"disabled"} />
           </div>
-          <div style="width:120px;">
+          <div>
             <label>B</label>
             <input data-rrb="${esc(m.id)}" type="number" min="0" value="${m.bScore===null?"":m.bScore}" ${canEdit?"":"disabled"} />
           </div>
-          <div style="width:120px;">
+          <div>
             <label>Tisch</label>
             <input data-rrt="${esc(m.id)}" type="number" min="1" value="${m.tableNo??""}" ${canEdit?"":"disabled"} />
           </div>
-          <div style="flex:1;min-width:220px;">
+          <div style="min-width:220px;">
             <label>Notiz</label>
             <input data-rrn="${esc(m.id)}" value="${esc(m.note||"")}" ${canEdit?"":"disabled"} />
           </div>
