@@ -1,11 +1,180 @@
 {
   "version": 4,
-  "lastUpdated": "2026-02-16T15:36:13",
+  "lastUpdated": "2026-02-16T16:55:42.107Z",
   "logoDataUrl": null,
   "systems": {
     "PKM": {
-      "activeSeason": null,
-      "archive": []
+      "activeSeason": {
+        "id": "3eb03b1a91731819c6720db4f",
+        "system": "PKM",
+        "name": "Februar 2026",
+        "type": "SWISS_SERIES",
+        "createdAt": 1771256732495,
+        "endedAt": null,
+        "settings": {
+          "scoring": {
+            "win": 3,
+            "draw": 1,
+            "loss": 0
+          },
+          "attendanceBonus": false,
+          "seasonPoints": {
+            "base": 10,
+            "divisorN": 8,
+            "exponent": 0.5,
+            "rounding": 1
+          }
+        },
+        "roster": [],
+        "seasonPointsByTeamId": {},
+        "tournaments": [
+          {
+            "id": "25ca4af82dd4819c6722199e",
+            "name": "#1 – 2026-02-16",
+            "createdAt": 1771256813982,
+            "closedAt": null,
+            "status": "OPEN",
+            "players": [
+              {
+                "id": "3c674222b022219c67214e60",
+                "name": "Grüsse"
+              },
+              {
+                "id": "16e595172796719c67211c54",
+                "name": "Männchen"
+              },
+              {
+                "id": "4ce4c1299ed62819c67214071",
+                "name": "Max"
+              },
+              {
+                "id": "e4ca94024ff6a19c6721735c",
+                "name": "Suppe"
+              }
+            ],
+            "N": 4,
+            "roundsClosed": [
+              {
+                "no": 1,
+                "status": "CLOSED",
+                "matches": [
+                  {
+                    "id": "7e99f27cb3b78819c67227904",
+                    "tableNo": 1,
+                    "resultType": "NORMAL",
+                    "a": {
+                      "id": "16e595172796719c67211c54",
+                      "name": "Männchen"
+                    },
+                    "b": {
+                      "id": "3c674222b022219c67214e60",
+                      "name": "Grüsse"
+                    },
+                    "note": "",
+                    "aScore": 1,
+                    "bScore": 2
+                  },
+                  {
+                    "id": "e46db0d83bd1719c67227904",
+                    "tableNo": 2,
+                    "resultType": "DOUBLE_LOSS",
+                    "a": {
+                      "id": "4ce4c1299ed62819c67214071",
+                      "name": "Max"
+                    },
+                    "b": {
+                      "id": "e4ca94024ff6a19c6721735c",
+                      "name": "Suppe"
+                    },
+                    "note": "",
+                    "aScore": 0,
+                    "bScore": 0
+                  }
+                ]
+              }
+            ],
+            "roundOpen": {
+              "no": 2,
+              "status": "OPEN",
+              "matches": [
+                {
+                  "id": "b1739882fc160819c6738d036",
+                  "tableNo": 1,
+                  "resultType": "NORMAL",
+                  "a": {
+                    "id": "3c674222b022219c67214e60",
+                    "name": "Grüsse"
+                  },
+                  "b": {
+                    "id": "4ce4c1299ed62819c67214071",
+                    "name": "Max"
+                  },
+                  "note": "",
+                  "aScore": null,
+                  "bScore": null
+                },
+                {
+                  "id": "89c413402dba0819c6738d036",
+                  "tableNo": 2,
+                  "resultType": "NORMAL",
+                  "a": {
+                    "id": "16e595172796719c67211c54",
+                    "name": "Männchen"
+                  },
+                  "b": {
+                    "id": "e4ca94024ff6a19c6721735c",
+                    "name": "Suppe"
+                  },
+                  "note": "",
+                  "aScore": null,
+                  "bScore": null
+                }
+              ]
+            },
+            "seasonPointsByTeamId": {}
+          }
+        ]
+      },
+      "archive": [
+        {
+          "id": "ef72954ebbb1519c673bd4cd",
+          "system": "PKM",
+          "name": "Februar 2026",
+          "type": "SWISS_SERIES",
+          "createdAt": 1771258500301,
+          "endedAt": 1771260783163,
+          "settings": {
+            "scoring": {
+              "win": 3,
+              "draw": 1,
+              "loss": 0
+            },
+            "attendanceBonus": false,
+            "seasonPoints": {
+              "base": 10,
+              "divisorN": 8,
+              "exponent": 0.5,
+              "rounding": 1
+            }
+          },
+          "roster": [],
+          "seasonPointsByTeamId": {},
+          "tournaments": [
+            {
+              "id": "eb5180fd5221a19c6747701e",
+              "name": "#1 – 2026-02-16",
+              "createdAt": 1771259260958,
+              "closedAt": null,
+              "status": "OPEN",
+              "players": [],
+              "N": 0,
+              "roundsClosed": [],
+              "roundOpen": null,
+              "seasonPointsByTeamId": {}
+            }
+          ]
+        }
+      ]
     },
     "YGO": {
       "activeSeason": null,
