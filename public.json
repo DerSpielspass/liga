@@ -1,62 +1,11 @@
 {
-  "version": 1,
-  "lastUpdated": "2026-02-16T15:18:37.586Z",
-  "system": "PKM",
-  "season": {
-    "name": "PKM Saison",
-    "tournaments": [
-      {
-        "id": 1771254806409,
-        "players": [
-          {
-            "id": 1771254779981.5146,
-            "name": "Gast 1"
-          },
-          {
-            "id": 1771254783984.1633,
-            "name": "Gast 2"
-          },
-          {
-            "id": 1771254791276.3242,
-            "name": "Gast 3"
-          },
-          {
-            "id": 1771254794740.1204,
-            "name": "Gast 4"
-          }
-        ],
-        "closed": false,
-        "seasonPoints": {}
-      },
-      {
-        "id": 1771254811058,
-        "players": [
-          {
-            "id": 1771254779981.5146,
-            "name": "Gast 1"
-          },
-          {
-            "id": 1771254783984.1633,
-            "name": "Gast 2"
-          },
-          {
-            "id": 1771254791276.3242,
-            "name": "Gast 3"
-          },
-          {
-            "id": 1771254794740.1204,
-            "name": "Gast 4"
-          }
-        ],
-        "closed": true,
-        "seasonPoints": {}
-      }
-    ],
-    "seasonPoints": {
-      "1771254779981.5146": 7.1,
-      "1771254783984.1633": 7.1,
-      "1771254791276.3242": 7.1,
-      "1771254794740.1204": 7.1
-    }
-  }
+  "version": 3,
+  "lastUpdated": "2026-02-16T15:18:36",
+  "logoDataUrl": null,
+  "systems": {
+    "PKM": null,
+    "YGO": null,
+    "DT": null
+  },
+  "teams": []
 }
