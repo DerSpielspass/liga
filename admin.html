@@ -492,14 +492,6 @@ createSeasonBtn.addEventListener("click", ()=>{
   const sys = activeSystem();
   const name = newSeasonName.value.trim();
   if(!name) return;
-  // Duplicate season name protection (pro System)
-  const norm = name.toLowerCase();
-  const exists = state.seasons.some(s => (s.system===sys) && String(s.name||"").trim().toLowerCase()===norm);
-  if(exists){
-    alert("Diese Saison gibt es in " + sys + " bereits: \"" + name + "\".
-Bitte wähle einen anderen Namen.");
-    return;
-  }
   const id = uid();
   const season = {
     id, system: sys, name: name.slice(0,80),
