@@ -309,6 +309,7 @@ async function loadPublic(){
     standPill.textContent = "Stand: " + (lastUpdated ? parseTime(lastUpdated) : "—");
     renderLogo();
     buildSelectors();
+  updateTvContextLine();
     renderCurrent();
     subtitle.textContent = "Daten geladen.";
     return true;
@@ -491,6 +492,7 @@ function renderCurrent(){
   if(TV){ viewSel.value = "round"; }
   if(TV){ viewSel.value = "round"; }
   setView(viewSel.value || "table");
+  updateTvContextLine();
 
   if(season.type==="SWISS_SERIES"){
     const t = getSelectedTournament(season);
