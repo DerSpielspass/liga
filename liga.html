@@ -306,21 +306,21 @@ if(TV){
   // TV: standardmäßig Paarungen anzeigen
   try{ viewSel.value = "round"; }catch(e){}
 }
+
 const TV_ROTATE_MS = 30000;
-let tvRotateTimer = null;
+let tvRotateTimer=null;
 function startTvRotate(){
   if(!TV) return;
   if(tvRotateTimer) return;
-  tvRotateTimer = setInterval(()=>{
+  tvRotateTimer=setInterval(()=>{
     try{
-      const cur = viewSel.value || "round";
-      viewSel.value = (cur==="round") ? "table" : "round";
-      renderCurrent();
-  startTvRotate();
+      const cur = (viewSel && viewSel.value) ? viewSel.value : "round";
+      const next = (cur==="round") ? "table" : "round";
+      if(viewSel) viewSel.value = next;
+      setView(next);
     }catch(e){}
   }, TV_ROTATE_MS);
 }
-
 
 if(TV){
   // Im TV-Modus wollen wir standardmäßig Paarungen anzeigen.
@@ -349,6 +349,7 @@ async function loadPublic(){
     buildSelectors();
     forceSysSeasonFromUrl();
   renderCurrent();
+  startTvRotate();
     subtitle.textContent = "Daten geladen.";
     return true;
   }catch(err){
@@ -394,16 +395,6 @@ function buildSelectors(){
   }
 
   const season = getSelectedSeason();
-  if(TV){
-    try{
-      const lbl = getTvRoundLabel(season);
-      const el1 = document.getElementById('tvRoundLabel');
-      const el2 = document.getElementById('tvRoundLabel2');
-      if(el1) el1.textContent = lbl ? ('· '+lbl) : '';
-      if(el2) el2.textContent = lbl ? ('· '+lbl) : '';
-    }catch(e){}
-  }
-
   if(season && season.type==="SWISS_SERIES"){
     tournamentWrap.classList.remove("hide");
     viewSel.querySelector('option[value="seasonpoints"]').disabled = false;
@@ -453,16 +444,6 @@ function chooseTvTournamentAndRound(season){
 
 function buildRoundSelector(){
   const season = getSelectedSeason();
-  if(TV){
-    try{
-      const lbl = getTvRoundLabel(season);
-      const el1 = document.getElementById('tvRoundLabel');
-      const el2 = document.getElementById('tvRoundLabel2');
-      if(el1) el1.textContent = lbl ? ('· '+lbl) : '';
-      if(el2) el2.textContent = lbl ? ('· '+lbl) : '';
-    }catch(e){}
-  }
-
   if(!season){ roundSel.innerHTML = `<option value="">(—)</option>`; return; }
   if(season.type==="SWISS_SERIES"){
     const t = getSelectedTournament(season);
@@ -537,34 +518,8 @@ function computeStandings(players, matches, scoring){
   return arr;
 }
 
-
-function getTvRoundLabel(season){
-  try{
-    if(!season) return "";
-    if(season.type==="SWISS_SERIES"){
-      const t = (typeof getSelectedTournament==="function") ? getSelectedTournament(season) : null;
-      const r = (typeof getSelectedRound==="function") ? getSelectedRound(season,t) : null;
-      if(r && r.no!=null) return "Runde " + r.no;
-    }else if(season.type==="RR"){
-      const r = (typeof getSelectedRound==="function") ? getSelectedRound(season) : null;
-      if(r && r.no!=null) return "Spieltag " + r.no;
-    }
-  }catch(e){}
-  return "";
-}
-
 function renderCurrent(){
   const season = getSelectedSeason();
-  if(TV){
-    try{
-      const lbl = getTvRoundLabel(season);
-      const el1 = document.getElementById('tvRoundLabel');
-      const el2 = document.getElementById('tvRoundLabel2');
-      if(el1) el1.textContent = lbl ? ('· '+lbl) : '';
-      if(el2) el2.textContent = lbl ? ('· '+lbl) : '';
-    }catch(e){}
-  }
-
   const sys = systemSel.value || "PKM";
   if(!season){
     subtitle.textContent="Keine Saison.";
@@ -576,10 +531,17 @@ function renderCurrent(){
   // TV/Normal: Kontext auch direkt im Titel anzeigen (robust gegen Cache/Timing)
   try{ const t=document.getElementById("ctxTag"); if(t) t.textContent = `${sys} · ${season.name}`; }catch(e){}
 
-  if(TV){ viewSel.value = "round"; }
-  if(TV){ viewSel.value = "round"; }
+  if(TV && (!viewSel.value || viewSel.value==="")){ viewSel.value = "round"; }
   try{ if(TV){ subtitle.textContent = `${sys} · ${season.name}`; } }catch(e){}
   setView(viewSel.value || "table");
+  if(TV){
+    try{
+      const txt = (roundSel && roundSel.options && roundSel.selectedIndex>=0 && roundSel.options[roundSel.selectedIndex]) ? (roundSel.options[roundSel.selectedIndex].textContent||"") : "";
+      const lbl = txt ? ("· "+txt) : "";
+      const a=document.getElementById("tvRoundLabel"); if(a) a.textContent=lbl;
+      const b=document.getElementById("tvRoundLabel2"); if(b) b.textContent=lbl;
+    }catch(e){}
+  }
 
   if(season.type==="SWISS_SERIES"){
     const t = getSelectedTournament(season);
