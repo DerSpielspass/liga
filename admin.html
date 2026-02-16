@@ -2,114 +2,265 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
-<title>Liga Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Liga Admin (v3)</title>
 <style>
-body{font-family:Arial;margin:20px;background:#111;color:#eee}
-button,select,input{margin:4px;padding:6px}
-.card{border:1px solid #444;padding:12px;margin-bottom:15px}
-table{border-collapse:collapse;width:100%}
-th,td{border:1px solid #444;padding:6px;text-align:left}
+  body{font-family:system-ui,Arial;margin:20px;background:#0f1220;color:#e9ecff}
+  h1{margin:0 0 14px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+  .card{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);padding:12px;border-radius:12px;margin:12px 0}
+  label{display:block;font-size:12px;opacity:.8;margin:0 0 6px}
+  input,select,button{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e9ecff}
+  button{cursor:pointer;font-weight:650}
+  button:hover{background:rgba(255,255,255,.10)}
+  .muted{opacity:.75;font-size:12px}
+  ul{margin:8px 0 0;padding-left:18px}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{border-bottom:1px solid rgba(255,255,255,.12);padding:8px;text-align:left}
+  th{opacity:.8;font-size:12px}
+  .right{text-align:right}
+  .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-size:12px;opacity:.9}
 </style>
 </head>
 <body>
-
-<h1>🛠️ Liga Admin (PKM / YGO / DT)</h1>
+<h1>🛠️ Liga Admin (v3) – PKM / YGO / DT</h1>
+<div class="muted">Diese Version zeigt dir sichtbar, wenn eine Saison angelegt wurde. Veröffentlichung erzeugt <b>public.json</b> für die Anzeige.</div>
 
 <div class="card">
-<h3>System</h3>
-<select id="system">
-<option>PKM</option>
-<option>YGO</option>
-<option>DT</option>
-</select>
-<button onclick="createSeason()">Neue Saison</button>
-<button onclick="publish()">Veröffentlichen</button>
+  <div class="row">
+    <div>
+      <label>System</label>
+      <select id="sys">
+        <option value="PKM">PKM</option>
+        <option value="YGO">YGO</option>
+        <option value="DT">DT</option>
+      </select>
+    </div>
+    <div style="min-width:260px;flex:1">
+      <label>Saisonname</label>
+      <input id="seasonName" placeholder="z. B. PKM Frühjahr 2026"/>
+    </div>
+    <button id="createSeason">Neue Saison anlegen/ersetzen</button>
+    <button id="toggleBonus">Teilnahmebonus: Aus</button>
+    <button id="publish">Veröffentlichen (public.json)</button>
+  </div>
+  <div style="margin-top:8px" class="row">
+    <span class="pill" id="seasonStatus">Keine Saison gewählt</span>
+    <span class="pill" id="lastSaved">—</span>
+  </div>
 </div>
 
 <div class="card">
-<h3>Nicknames</h3>
-<input id="nickname" placeholder="Nickname">
-<button onclick="addTeam()">Hinzufügen</button>
-<ul id="teamList"></ul>
+  <h3>Nicknames</h3>
+  <div class="row">
+    <div style="min-width:260px;flex:1">
+      <label>Nickname</label>
+      <input id="nick" placeholder="Nickname (öffentlich)"/>
+    </div>
+    <button id="addNick">Hinzufügen</button>
+  </div>
+  <ul id="nickList"></ul>
 </div>
 
 <div class="card">
-<h3>Swiss Turnier (PKM/YGO)</h3>
-<button onclick="startTournament()">Turnier starten</button>
-<button onclick="closeTournament()">Turnier abschließen</button>
-<div id="tournamentArea"></div>
+  <h3>Swiss-Turniere (PKM/YGO)</h3>
+  <div class="muted">In dieser v3-Demo gibt es noch keine Paarungen/Runden – nur Turnierabschluss → Saisonpunkte (Teilnehmer-Faktor) + optional Teilnahmebonus.</div>
+  <div class="row" style="margin-top:10px">
+    <button id="startT">Turnier starten (alle Nicknames als Teilnehmer)</button>
+    <button id="closeT">Turnier abschließen (Saisonpunkte berechnen)</button>
+  </div>
+  <div id="tStatus" class="muted" style="margin-top:8px">—</div>
+  <div style="overflow:auto">
+    <table>
+      <thead><tr><th>#</th><th>Nickname</th><th class="right">Turniere</th><th class="right">Saisonpkt</th></tr></thead>
+      <tbody id="spBody"></tbody>
+    </table>
+  </div>
 </div>
 
 <script>
-let state = JSON.parse(localStorage.getItem("liga_admin_v2")||"{}");
-if(!state.teams) state={teams:[], seasons:{}, activeSystem:"PKM"};
+const KEY="liga_admin_v3";
+const SCORE={win:3,draw:1,loss:0};
 
-function save(){localStorage.setItem("liga_admin_v2",JSON.stringify(state));render();}
-
-function addTeam(){
-let n=document.getElementById("nickname").value.trim();
-if(!n)return;
-state.teams.push({id:Date.now()+Math.random(),name:n});
-document.getElementById("nickname").value="";
-save();
-}
-
-function createSeason(){
-let sys=document.getElementById("system").value;
-state.seasons[sys]={name:sys+" Saison", tournaments:[], seasonPoints:{}};
-state.activeSystem=sys;
-save();
-}
-
-function startTournament(){
-let sys=document.getElementById("system").value;
-if(!state.seasons[sys]) return alert("Erst Saison anlegen");
-let t={id:Date.now(),players:[...state.teams],closed:false,seasonPoints:{}};
-state.seasons[sys].tournaments.push(t);
-save();
-}
-
-function closeTournament(){
-let sys=document.getElementById("system").value;
-let s=state.seasons[sys];
-if(!s||!s.tournaments.length)return;
-let t=s.tournaments[s.tournaments.length-1];
-if(t.closed)return;
-
-let N=t.players.length||1;
-let factor=Math.sqrt(N/8);
-for(let p of t.players){
-let sp=10*factor;
-sp=Math.round(sp*10)/10;
-s.seasonPoints[p.id]=(s.seasonPoints[p.id]||0)+sp;
-}
-t.closed=true;
-save();
-alert("Turnier abgeschlossen + Saisonpunkte berechnet");
-}
-
-function publish(){
-let sys=document.getElementById("system").value;
-let s=state.seasons[sys];
-if(!s)return alert("Keine Saison");
-
-let pub={
-version:1,
-lastUpdated:new Date().toISOString(),
-system:sys,
-season:s
+let state = JSON.parse(localStorage.getItem(KEY)||"null") || {
+  teams:[],
+  seasons:{
+    PKM:null, YGO:null, DT:null
+  },
+  settings:{ attendanceBonus:{PKM:false,YGO:false,DT:false} },
+  ui:{ sys:"PKM" }
 };
 
-let blob=new Blob([JSON.stringify(pub,null,2)],{type:"application/json"});
-let a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="public.json";
-a.click();
+const $=id=>document.getElementById(id);
+const nowIso=()=>new Date().toISOString();
+const round1=x=>Math.round(x*10)/10;
+
+function save(){
+  state._lastSaved = nowIso();
+  localStorage.setItem(KEY, JSON.stringify(state));
+  render();
+}
+
+function activeSys(){ return $("sys").value; }
+function activeSeason(){ return state.seasons[activeSys()]; }
+
+function ensureSeason(sys){
+  if(!state.seasons[sys]){
+    state.seasons[sys]={
+      name: sys+" Saison",
+      createdAt: Date.now(),
+      attendanceBonus: false,
+      tournaments:[],
+      seasonPointsById:{},
+      tournamentsPlayedById:{}
+    };
+  }
 }
 
 function render(){
-document.getElementById("teamList").innerHTML=state.teams.map(t=>"<li>"+t.name+"</li>").join("");
+  $("sys").value = state.ui.sys || "PKM";
+  const sys = activeSys();
+  const s = state.seasons[sys];
+
+  $("seasonName").value = s ? s.name : "";
+  $("seasonStatus").textContent = s ? (sys+" · "+s.name) : (sys+" · keine Saison");
+  $("lastSaved").textContent = "Gespeichert: " + (state._lastSaved ? new Date(state._lastSaved).toLocaleString("de-DE") : "—");
+
+  $("toggleBonus").textContent = "Teilnahmebonus: " + (state.settings.attendanceBonus[sys] ? "An (+1.0)" : "Aus");
+
+  // nicknames
+  $("nickList").innerHTML = state.teams.length
+    ? state.teams.slice().sort((a,b)=>a.name.localeCompare(b.name,"de")).map(t=>`<li>${t.name}</li>`).join("")
+    : `<li class="muted">Noch keine Nicknames.</li>`;
+
+  // swiss status
+  if(sys==="DT"){
+    $("tStatus").textContent = "DT ist Round Robin (in dieser Demo noch nicht umgesetzt).";
+  } else {
+    if(!s){ $("tStatus").textContent = "Lege zuerst eine Saison an."; }
+    else {
+      const t = s.tournaments[s.tournaments.length-1];
+      if(!t) $("tStatus").textContent = "Noch kein Turnier gestartet.";
+      else $("tStatus").textContent = `Letztes Turnier: ${t.name} · Teilnehmer: ${t.N} · Status: ${t.closed?"abgeschlossen":"offen"}`;
+    }
+  }
+
+  // season points table
+  if(!s){
+    $("spBody").innerHTML = `<tr><td colspan="4" class="muted">—</td></tr>`;
+  } else {
+    const rows = state.teams.map(t=>({
+      id:t.id, name:t.name,
+      pts:Number(s.seasonPointsById[t.id]||0),
+      played:Number(s.tournamentsPlayedById[t.id]||0)
+    })).filter(r=>r.played>0 || r.pts>0);
+
+    rows.sort((a,b)=>(b.pts-a.pts)||(b.played-a.played)||a.name.localeCompare(b.name,"de"));
+    $("spBody").innerHTML = rows.length ? rows.map((r,i)=>`
+      <tr><td>${i+1}</td><td><b>${r.name}</b></td><td class="right">${r.played}</td><td class="right"><b>${r.pts.toFixed(1)}</b></td></tr>
+    `).join("") : `<tr><td colspan="4" class="muted">Noch keine Saisonpunkte.</td></tr>`;
+  }
 }
+
+$("sys").addEventListener("change", ()=>{
+  state.ui.sys = activeSys();
+  render();
+});
+
+$("addNick").addEventListener("click", ()=>{
+  const n=$("nick").value.trim();
+  if(!n) return;
+  if(state.teams.some(t=>t.name.toLowerCase()===n.toLowerCase())) return alert("Nickname existiert schon.");
+  state.teams.push({id:String(Date.now()+Math.random()), name:n});
+  $("nick").value="";
+  save();
+});
+
+$("createSeason").addEventListener("click", ()=>{
+  const sys=activeSys();
+  const name=$("seasonName").value.trim() || (sys+" Saison");
+  state.seasons[sys]={
+    name,
+    createdAt: Date.now(),
+    attendanceBonus: state.settings.attendanceBonus[sys] || false,
+    tournaments:[],
+    seasonPointsById:{},
+    tournamentsPlayedById:{}
+  };
+  save();
+  alert("Saison angelegt: "+name);
+});
+
+$("toggleBonus").addEventListener("click", ()=>{
+  const sys=activeSys();
+  state.settings.attendanceBonus[sys] = !state.settings.attendanceBonus[sys];
+  // reflect in season if exists
+  if(state.seasons[sys]) state.seasons[sys].attendanceBonus = state.settings.attendanceBonus[sys];
+  save();
+});
+
+$("startT").addEventListener("click", ()=>{
+  const sys=activeSys();
+  if(sys==="DT") return alert("DT ist in dieser Demo noch nicht umgesetzt.");
+  ensureSeason(sys);
+  const s=state.seasons[sys];
+  if(state.teams.length<2) return alert("Mindestens 2 Nicknames anlegen.");
+  const number = s.tournaments.length + 1;
+  const dateStr = new Date().toISOString().slice(0,10);
+  s.tournaments.push({
+    id:String(Date.now()),
+    name:`#${number} – ${dateStr}`,
+    N: state.teams.length,
+    closed:false
+  });
+  save();
+});
+
+$("closeT").addEventListener("click", ()=>{
+  const sys=activeSys();
+  if(sys==="DT") return alert("DT ist in dieser Demo noch nicht umgesetzt.");
+  const s=activeSeason();
+  if(!s) return alert("Erst Saison anlegen.");
+  const t = s.tournaments[s.tournaments.length-1];
+  if(!t) return alert("Erst Turnier starten.");
+  if(t.closed) return alert("Turnier ist schon abgeschlossen.");
+
+  // Season points: perf assumed 100% for demo (weil keine Runden/Ergebnisse in v3)
+  // Wir werten: maximale Leistung 1.0 pro Turnier (nur Demo). Teilnehmer-Faktor: sqrt(N/8).
+  const factor = Math.sqrt((t.N||1)/8);
+  for(const p of state.teams){
+    s.tournamentsPlayedById[p.id] = (s.tournamentsPlayedById[p.id]||0) + 1;
+    let sp = 1.0 * 10 * factor;
+    if(state.settings.attendanceBonus[sys]) sp += 1.0;
+    sp = round1(sp);
+    s.seasonPointsById[p.id] = round1((s.seasonPointsById[p.id]||0) + sp);
+  }
+
+  t.closed = true;
+  save();
+  alert("Turnier abgeschlossen. Saisonpunkte berechnet (Demo).");
+});
+
+$("publish").addEventListener("click", ()=>{
+  // Build multi-system public.json
+  const pub = {
+    version: 3,
+    lastUpdated: nowIso(),
+    logoDataUrl: null,
+    systems: {
+      PKM: state.seasons.PKM,
+      YGO: state.seasons.YGO,
+      DT: state.seasons.DT
+    },
+    teams: state.teams
+  };
+  const blob=new Blob([JSON.stringify(pub,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="public.json";
+  a.click();
+});
+
 render();
 </script>
 </body>
