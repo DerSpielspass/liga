@@ -280,29 +280,22 @@ const TV = url.searchParams.get("tv")==="1";
 
 function applyUrlSelection(){
   try{
-    const url = new URL(location.href);
-const SYS_PARAM = (url.searchParams.get('sys')||'').toUpperCase();
-const SEASON_PARAM = (url.searchParams.get('season')||'');
-
-    const sysP = url.searchParams.get("sys");
-    const seasonP = url.searchParams.get("season");
-    if(sysP && systemSel){
-      const s = sysP.toUpperCase();
-      // only apply if option exists
-      const ok = Array.from(systemSel.options||[]).some(o => o.value===s);
-      if(ok) systemSel.value = s;
-    }
-    // rebuilding season options after system change
+    if(!SYS_PARAM || !systemSel) return;
+    const ok = Array.from(systemSel.options||[]).some(o => o.value===SYS_PARAM);
+    if(ok) systemSel.value = SYS_PARAM;
     if(typeof buildSeasonSelector==="function") buildSeasonSelector();
-    if(seasonP && seasonSel){
-      const wanted = seasonP;
-      const opt = Array.from(seasonSel.options||[]).find(o => (o.textContent||"").trim()===wanted);
-      if(opt) seasonSel.value = opt.value;
-    } else if(seasonSel && seasonSel.options && seasonSel.options.length){
-      seasonSel.selectedIndex = 0;
+    if(seasonSel && seasonSel.options && seasonSel.options.length){
+      if(SEASON_PARAM){
+        const opt = Array.from(seasonSel.options).find(o => (o.textContent||"").trim()===SEASON_PARAM);
+        if(opt) seasonSel.value = opt.value;
+        else seasonSel.selectedIndex = 0;
+      } else {
+        seasonSel.selectedIndex = 0;
+      }
     }
   }catch(e){}
 }
+
 
 if(TV) document.documentElement.classList.add("tv");
 if(TV){
@@ -387,7 +380,7 @@ function buildSelectors(){
   // --- TV Kontextanzeige (stabil & direkt) ---
   if(TV && subtitle){
     try{
-      const sys = activeSystem ? activeSystem() : (systemSel && systemSel.value ? systemSel.value : "");
+      const sys = systemSel && systemSel.value ? systemSel.value : "";
       const sname = season && season.name ? season.name : "";
       const base = "Daten geladen.";
       subtitle.textContent = base
@@ -447,7 +440,7 @@ function buildRoundSelector(){
   // --- TV Kontextanzeige (stabil & direkt) ---
   if(TV && subtitle){
     try{
-      const sys = activeSystem ? activeSystem() : (systemSel && systemSel.value ? systemSel.value : "");
+      const sys = systemSel && systemSel.value ? systemSel.value : "";
       const sname = season && season.name ? season.name : "";
       const base = "Daten geladen.";
       subtitle.textContent = base
@@ -481,12 +474,24 @@ function buildRoundSelector(){
   } else roundSel.innerHTML = `<option value="">(—)</option>`;
 }
 function getSelectedSeason(){
-  const sys = systemSel.value || "PKM";
-  const sysData = systems()[sys] || {};
-  const id = seasonSel.value;
-  if(sysData.activeSeason && sysData.activeSeason.id===id) return sysData.activeSeason;
-  return (sysData.archive||[]).find(s=>s.id===id) || null;
+  const sys = activeSystem();
+  const d = getSysData(sys);
+  if(!d) return null;
+  const seasons = d.seasons ? d.seasons : (d.season ? [d.season] : []);
+  if(!seasons.length) return null;
+  // URL: saison nach Name auswählen
+  if(SEASON_PARAM){
+    const byName = seasons.find(s => (s.name||'')===SEASON_PARAM);
+    if(byName) return byName;
+  }
+  // UI-Auswahl, falls vorhanden
+  if(seasonSel && seasonSel.value){
+    const byId = seasons.find(s => String(s.id)===String(seasonSel.value));
+    if(byId) return byId;
+  }
+  return seasons[0];
 }
+
 function getSelectedTournament(season){
   const tid = tournamentSel.value;
   return (season.tournaments||[]).find(t=>t.id===tid) || null;
@@ -534,7 +539,7 @@ function renderCurrent(){
   // --- TV Kontextanzeige (stabil & direkt) ---
   if(TV && subtitle){
     try{
-      const sys = activeSystem ? activeSystem() : (systemSel && systemSel.value ? systemSel.value : "");
+      const sys = systemSel && systemSel.value ? systemSel.value : "";
       const sname = season && season.name ? season.name : "";
       const base = "Daten geladen.";
       subtitle.textContent = base
