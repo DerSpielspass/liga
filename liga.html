@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<title>Liga Anzeige</title>
+<style>
+body{font-family:Arial;margin:20px;background:#111;color:#eee}
+.card{border:1px solid #444;padding:12px;margin-bottom:15px}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #444;padding:6px}
+</style>
+</head>
+<body>
+
+<h1>🏆 Liga Anzeige</h1>
+<div id="stand"></div>
+<div id="content"></div>
+
+<script>
+async function load(){
+try{
+let r=await fetch("public.json?ts="+Date.now());
+let j=await r.json();
+document.getElementById("stand").innerHTML="Stand: "+new Date(j.lastUpdated).toLocaleString("de-DE");
+render(j);
+}catch(e){
+document.getElementById("content").innerHTML="public.json konnte nicht geladen werden.";
+}
+}
+
+function render(j){
+let s=j.season;
+if(!s){document.getElementById("content").innerHTML="Keine Saison";return;}
+let rows=Object.entries(s.seasonPoints||{})
+.map(([id,pts])=>({name:(s.tournaments[0]?.players.find(p=>p.id==id)||{}).name||"Spieler",pts}))
+.sort((a,b)=>b.pts-a.pts);
+
+document.getElementById("content").innerHTML=`
+<div class="card">
+<h3>Saisonwertung</h3>
+<table>
+<tr><th>#</th><th>Nickname</th><th>Punkte</th></tr>
+${rows.map((r,i)=>"<tr><td>"+(i+1)+"</td><td>"+r.name+"</td><td>"+r.pts.toFixed(1)+"</td></tr>").join("")}
+</table>
+</div>`;
+}
+
+load();
+setInterval(load,60000);
+</script>
+</body>
+</html>
