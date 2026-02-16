@@ -277,51 +277,6 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const TV = url.searchParams.get("tv")==="1";
-
-
-function chooseTvDefaultSystemSeason(){
-  if(!TV || !pub || !pub.systems) return;
-  try{
-    const sysParam = new URL(location.href).searchParams.get("sys");
-    const seasonParam = new URL(location.href).searchParams.get("season");
-    const sysOrder = ["PKM","YGO","DT"];
-    // 1) explicit via URL
-    if(sysParam && systemSel){
-      const s = sysParam.toUpperCase();
-      if(sysOrder.includes(s)) systemSel.value = s;
-    } else if(systemSel){
-      // 2) first system that has any seasons published
-      const first = sysOrder.find(s => pub.systems[s] && pub.systems[s].seasons && pub.systems[s].seasons.length);
-      if(first) systemSel.value = first;
-    }
-    // rebuild season selector for chosen system
-    if(typeof buildSeasonSelector==="function") buildSeasonSelector();
-    if(seasonParam && seasonSel){
-      // try by name
-      const opts = Array.from(seasonSel.options||[]);
-      const match = opts.find(o => (o.textContent||"").trim()===seasonParam);
-      if(match) seasonSel.value = match.value;
-    } else if(seasonSel && seasonSel.options && seasonSel.options.length){
-      seasonSel.selectedIndex = 0;
-    }
-  }catch(e){}
-}
-
-function updateTvContextLine(){
-  if(!TV) return;
-  try{
-    const sys = (systemSel && systemSel.value) ? systemSel.value : "";
-    const season = (typeof getSelectedSeason==="function") ? getSelectedSeason() : null;
-    const sname = (season && season.name) ? season.name : "";
-    if(subtitle){
-      const base = (subtitle.textContent||"Daten geladen.").split(" · ")[0];
-      subtitle.textContent = base
-        + (sys ? " · "+sys : "")
-        + (sname ? " · "+sname : "");
-    }
-  }catch(e){}
-}
-
 if(TV) document.documentElement.classList.add("tv");
 if(TV){
   // TV: standardmäßig Paarungen anzeigen
@@ -354,8 +309,6 @@ async function loadPublic(){
     standPill.textContent = "Stand: " + (lastUpdated ? parseTime(lastUpdated) : "—");
     renderLogo();
     buildSelectors();
-  if(typeof chooseTvDefaultSystemSeason==="function") chooseTvDefaultSystemSeason();
-  if(typeof updateTvContextLine==="function") updateTvContextLine();
     renderCurrent();
     subtitle.textContent = "Daten geladen.";
     return true;
@@ -402,6 +355,17 @@ function buildSelectors(){
   }
 
   const season = getSelectedSeason();
+  // --- TV Kontextanzeige (stabil & direkt) ---
+  if(TV && subtitle){
+    try{
+      const sys = systemSel && systemSel.value ? systemSel.value : "";
+      const sname = season && season.name ? season.name : "";
+      const base = "Daten geladen.";
+      subtitle.textContent = base
+        + (sys ? " · " + sys : "")
+        + (sname ? " · " + sname : "");
+    }catch(e){}
+  }
   if(season && season.type==="SWISS_SERIES"){
     tournamentWrap.classList.remove("hide");
     viewSel.querySelector('option[value="seasonpoints"]').disabled = false;
@@ -451,6 +415,17 @@ function chooseTvTournamentAndRound(season){
 
 function buildRoundSelector(){
   const season = getSelectedSeason();
+  // --- TV Kontextanzeige (stabil & direkt) ---
+  if(TV && subtitle){
+    try{
+      const sys = systemSel && systemSel.value ? systemSel.value : "";
+      const sname = season && season.name ? season.name : "";
+      const base = "Daten geladen.";
+      subtitle.textContent = base
+        + (sys ? " · " + sys : "")
+        + (sname ? " · " + sname : "");
+    }catch(e){}
+  }
   if(!season){ roundSel.innerHTML = `<option value="">(—)</option>`; return; }
   if(season.type==="SWISS_SERIES"){
     const t = getSelectedTournament(season);
@@ -527,6 +502,17 @@ function computeStandings(players, matches, scoring){
 
 function renderCurrent(){
   const season = getSelectedSeason();
+  // --- TV Kontextanzeige (stabil & direkt) ---
+  if(TV && subtitle){
+    try{
+      const sys = systemSel && systemSel.value ? systemSel.value : "";
+      const sname = season && season.name ? season.name : "";
+      const base = "Daten geladen.";
+      subtitle.textContent = base
+        + (sys ? " · " + sys : "")
+        + (sname ? " · " + sname : "");
+    }catch(e){}
+  }
   const sys = systemSel.value || "PKM";
   if(!season){
     subtitle.textContent="Keine Saison.";
@@ -538,7 +524,6 @@ function renderCurrent(){
   if(TV){ viewSel.value = "round"; }
   if(TV){ viewSel.value = "round"; }
   setView(viewSel.value || "table");
-  if(typeof updateTvContextLine==="function") updateTvContextLine();
 
   if(season.type==="SWISS_SERIES"){
     const t = getSelectedTournament(season);
