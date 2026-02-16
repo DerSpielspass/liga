@@ -2,51 +2,107 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
-<title>Liga Anzeige</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Liga Anzeige (v3)</title>
 <style>
-body{font-family:Arial;margin:20px;background:#111;color:#eee}
-.card{border:1px solid #444;padding:12px;margin-bottom:15px}
-table{border-collapse:collapse;width:100%}
-th,td{border:1px solid #444;padding:6px}
+  body{font-family:system-ui,Arial;margin:20px;background:#0f1220;color:#e9ecff}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+  .card{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);padding:12px;border-radius:12px;margin:12px 0}
+  label{display:block;font-size:12px;opacity:.8;margin:0 0 6px}
+  select,button{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e9ecff}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{border-bottom:1px solid rgba(255,255,255,.12);padding:8px;text-align:left}
+  th{opacity:.8;font-size:12px}
+  .right{text-align:right}
+  .muted{opacity:.75;font-size:12px}
+  .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-size:12px;opacity:.9}
 </style>
 </head>
 <body>
+<h1>🏆 Liga Anzeige (v3)</h1>
 
-<h1>🏆 Liga Anzeige</h1>
-<div id="stand"></div>
-<div id="content"></div>
+<div class="row">
+  <span class="pill" id="stand">Stand: —</span>
+</div>
+
+<div class="card">
+  <div class="row">
+    <div>
+      <label>System</label>
+      <select id="sys">
+        <option value="PKM">PKM</option>
+        <option value="YGO">YGO</option>
+        <option value="DT">DT</option>
+      </select>
+    </div>
+    <button id="reload">Neu laden</button>
+    <span class="muted">TV-Modus: <code>?tv=1</code> (Auto-Reload 60s)</span>
+  </div>
+  <div class="muted" id="seasonName" style="margin-top:8px">—</div>
+</div>
+
+<div class="card">
+  <h3>Saisonwertung (Swiss Demo)</h3>
+  <div class="muted">In v3 werden Saisonpunkte angezeigt, sobald im Admin veröffentlicht wurde.</div>
+  <div style="overflow:auto">
+    <table>
+      <thead><tr><th>#</th><th>Nickname</th><th class="right">Turniere</th><th class="right">Saisonpkt</th></tr></thead>
+      <tbody id="body"></tbody>
+    </table>
+  </div>
+</div>
 
 <script>
+const $=id=>document.getElementById(id);
+const url=new URL(location.href);
+const TV=url.searchParams.get("tv")==="1";
+
+let pub=null;
+
+function round1(x){return Math.round(x*10)/10;}
+
 async function load(){
-try{
-let r=await fetch("public.json?ts="+Date.now());
-let j=await r.json();
-document.getElementById("stand").innerHTML="Stand: "+new Date(j.lastUpdated).toLocaleString("de-DE");
-render(j);
-}catch(e){
-document.getElementById("content").innerHTML="public.json konnte nicht geladen werden.";
-}
+  try{
+    const res = await fetch("public.json?ts="+Date.now(), {cache:"no-store"});
+    pub = await res.json();
+    $("stand").textContent = "Stand: " + new Date(pub.lastUpdated||Date.now()).toLocaleString("de-DE");
+    render();
+  }catch(e){
+    $("seasonName").textContent = "public.json konnte nicht geladen werden.";
+    $("body").innerHTML = `<tr><td colspan="4" class="muted">Fehler.</td></tr>`;
+  }
 }
 
-function render(j){
-let s=j.season;
-if(!s){document.getElementById("content").innerHTML="Keine Saison";return;}
-let rows=Object.entries(s.seasonPoints||{})
-.map(([id,pts])=>({name:(s.tournaments[0]?.players.find(p=>p.id==id)||{}).name||"Spieler",pts}))
-.sort((a,b)=>b.pts-a.pts);
+function render(){
+  const sys=$("sys").value;
+  const s = pub?.systems?.[sys] || null;
+  if(!s){
+    $("seasonName").textContent = sys + " · Keine Saison";
+    $("body").innerHTML = `<tr><td colspan="4" class="muted">Keine Saison.</td></tr>`;
+    return;
+  }
+  $("seasonName").textContent = sys + " · " + s.name;
 
-document.getElementById("content").innerHTML=`
-<div class="card">
-<h3>Saisonwertung</h3>
-<table>
-<tr><th>#</th><th>Nickname</th><th>Punkte</th></tr>
-${rows.map((r,i)=>"<tr><td>"+(i+1)+"</td><td>"+r.name+"</td><td>"+r.pts.toFixed(1)+"</td></tr>").join("")}
-</table>
-</div>`;
+  const teams = pub.teams||[];
+  const rows = teams.map(t=>({
+    name:t.name,
+    pts:Number(s.seasonPointsById?.[t.id]||0),
+    played:Number(s.tournamentsPlayedById?.[t.id]||0)
+  })).filter(r=>r.played>0 || r.pts>0);
+
+  rows.sort((a,b)=>(b.pts-a.pts)||(b.played-a.played)||a.name.localeCompare(b.name,"de"));
+  $("body").innerHTML = rows.length ? rows.map((r,i)=>`
+    <tr><td>${i+1}</td><td><b>${r.name}</b></td><td class="right">${r.played}</td><td class="right"><b>${r.pts.toFixed(1)}</b></td></tr>
+  `).join("") : `<tr><td colspan="4" class="muted">Noch keine Saisonpunkte.</td></tr>`;
 }
+
+$("sys").addEventListener("change", render);
+$("reload").addEventListener("click", load);
 
 load();
-setInterval(load,60000);
+if(TV){
+  setInterval(load, 60000);
+}
 </script>
 </body>
 </html>
