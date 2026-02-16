@@ -281,6 +281,9 @@ const TV = url.searchParams.get("tv")==="1";
 function applyUrlSelection(){
   try{
     const url = new URL(location.href);
+const SYS_PARAM = (url.searchParams.get('sys')||'').toUpperCase();
+const SEASON_PARAM = (url.searchParams.get('season')||'');
+
     const sysP = url.searchParams.get("sys");
     const seasonP = url.searchParams.get("season");
     if(sysP && systemSel){
@@ -384,7 +387,7 @@ function buildSelectors(){
   // --- TV Kontextanzeige (stabil & direkt) ---
   if(TV && subtitle){
     try{
-      const sys = systemSel && systemSel.value ? systemSel.value : "";
+      const sys = activeSystem ? activeSystem() : (systemSel && systemSel.value ? systemSel.value : "");
       const sname = season && season.name ? season.name : "";
       const base = "Daten geladen.";
       subtitle.textContent = base
@@ -444,7 +447,7 @@ function buildRoundSelector(){
   // --- TV Kontextanzeige (stabil & direkt) ---
   if(TV && subtitle){
     try{
-      const sys = systemSel && systemSel.value ? systemSel.value : "";
+      const sys = activeSystem ? activeSystem() : (systemSel && systemSel.value ? systemSel.value : "");
       const sname = season && season.name ? season.name : "";
       const base = "Daten geladen.";
       subtitle.textContent = base
@@ -531,7 +534,7 @@ function renderCurrent(){
   // --- TV Kontextanzeige (stabil & direkt) ---
   if(TV && subtitle){
     try{
-      const sys = systemSel && systemSel.value ? systemSel.value : "";
+      const sys = activeSystem ? activeSystem() : (systemSel && systemSel.value ? systemSel.value : "");
       const sname = season && season.name ? season.name : "";
       const base = "Daten geladen.";
       subtitle.textContent = base
