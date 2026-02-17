@@ -279,6 +279,7 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const URL_SYS=(url.searchParams.get('sys')||'').toUpperCase();
+const BUILD_ID = "tvbrand20";
 const URL_SEASON=(url.searchParams.get('season')||'');
 function forceSysSeasonFromUrl(){
   try{
@@ -288,6 +289,9 @@ function forceSysSeasonFromUrl(){
       if(ok && systemSel.value!==URL_SYS){
         systemSel.value=URL_SYS;
         systemSel.dispatchEvent(new Event('change'));
+        if(typeof buildSeasonSelector==="function") buildSeasonSelector();
+        if(typeof buildTournamentSelector==="function") buildTournamentSelector();
+        if(typeof buildRoundSelector==="function") buildRoundSelector();
       }
     }
     if(URL_SEASON && seasonSel && seasonSel.options){
@@ -295,6 +299,8 @@ function forceSysSeasonFromUrl(){
       if(opt && seasonSel.value!==opt.value){
         seasonSel.value=opt.value;
         seasonSel.dispatchEvent(new Event('change'));
+        if(typeof buildTournamentSelector==="function") buildTournamentSelector();
+        if(typeof buildRoundSelector==="function") buildRoundSelector();
       }
     }
   }catch(e){}
@@ -519,6 +525,8 @@ function computeStandings(players, matches, scoring){
 }
 
 function renderCurrent(){
+  try{ forceSysSeasonFromUrl(); }catch(e){}
+
   const season = getSelectedSeason();
   const sys = systemSel.value || "PKM";
   if(!season){
