@@ -279,7 +279,7 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const URL_SYS=(url.searchParams.get('sys')||'').toUpperCase();
-const BUILD_ID = "tvbrand20";
+const BUILD_ID = "tvbrand22";
 const TVDEBUG = url.searchParams.get('debug')==='1';
 const URL_SEASON=(url.searchParams.get('season')||'');
 function forceSysSeasonFromUrl(){
@@ -547,6 +547,22 @@ function renderCurrent(){
   if(TV && (!viewSel.value || viewSel.value==="")){ viewSel.value = "round"; }
   try{ if(TV){ subtitle.textContent = `${sys} · ${season.name}`; } }catch(e){}
   setView(viewSel.value || "table");
+  try{
+    const dbg = document.getElementById("debugLine");
+    if(dbg){
+      if(TVDEBUG){
+        const info = (typeof forceSysSeasonFromUrl==="function") ? forceSysSeasonFromUrl() : null;
+        dbg.style.display="block";
+        dbg.textContent = "Debug · build="+BUILD_ID
+          + " · urlSys="+(info?info.urlSys:"")
+          + " · uiSys="+(info?info.uiSys:"")
+          + " · has="+(info?info.hasUrlSys:"")
+          + " · changed="+(info?info.changed:"");
+      } else {
+        dbg.style.display="none";
+      }
+    }
+  }catch(e){}
   if(TV){
     try{
       const txt = (roundSel && roundSel.options && roundSel.selectedIndex>=0 && roundSel.options[roundSel.selectedIndex]) ? (roundSel.options[roundSel.selectedIndex].textContent||"") : "";
