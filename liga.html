@@ -594,7 +594,16 @@ function renderCurrent(){
     const fixtures = open ? open.matches : [];
     fixtureList.innerHTML = fixtures.length ? fixtures.map(m=>{
       const bname = m.b ? m.b.name : "BYE";
-      return `<div class="item"><div><b>Tisch ${m.tableNo ?? "—"} · ${esc(m.a.name)} – ${esc(bname)}</b><div class="meta">${m.note?esc(m.note):"Offen"}</div></div></div>`;
+      return `
+  <div class="item">
+    <div class="tvMatchRow">
+      <div class="tvTable">${m.tableNo ?? "—"}</div>
+      <div class="tvVs">
+        <div>${esc(m.a.name)} <span class="muted">vs</span> ${esc(bname)}${showScore}</div>
+        <div class="meta">${metaText}</div>
+      </div>
+    </div>
+  </div>`;
     }).join("") : `<div class="muted">Keine offene Runde.</div>`;
 
     const results = closedRounds.flatMap(r=>r.matches.map(m=>({rno:r.no, ...m})));
