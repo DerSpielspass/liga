@@ -693,5 +693,32 @@ async function tick(){
 }
 tick();
 </script>
+
+<script>
+(function(){
+  function ready(fn){
+    if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', fn); }
+    else { fn(); }
+  }
+  ready(function(){
+    try{
+      var btn = document.getElementById('openTvFromLigaBtn');
+      if(!btn) return;
+      btn.addEventListener('click', function(){
+        var sysEl = document.getElementById('systemSel');
+        var seasonEl = document.getElementById('seasonSel');
+        var sys = (sysEl && sysEl.value) ? sysEl.value : 'PKM';
+        var url = 'tv.html?sys='+encodeURIComponent(sys);
+        // optional: season name as text (matches dropdown label)
+        if(seasonEl && seasonEl.selectedOptions && seasonEl.selectedOptions[0]){
+          var seasonName = (seasonEl.selectedOptions[0].textContent||'').trim();
+          if(seasonName){ url += '&season='+encodeURIComponent(seasonName); }
+        }
+        window.open(url, '_blank');
+      });
+    }catch(e){}
+  });
+})();
+</script>
 </body>
 </html>
