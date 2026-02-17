@@ -1549,5 +1549,33 @@ for(const sys of SYSTEMS){
 persist();
 renderAll();
 </script>
+
+<script>
+(function(){
+  function ready(fn){
+    if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', fn); }
+    else { fn(); }
+  }
+  ready(function(){
+    try{
+      var openLigaBtn = document.getElementById('openLigaBtn');
+      var openTvBtn   = document.getElementById('openTvBtn');
+      if(openLigaBtn){
+        openLigaBtn.addEventListener('click', function(){
+          window.open('liga.html', '_blank');
+        });
+      }
+      if(openTvBtn){
+        openTvBtn.addEventListener('click', function(){
+          var sysEl = document.getElementById('systemSel');
+          var sys = (sysEl && sysEl.value) ? sysEl.value : 'PKM';
+          window.open('tv.html?sys='+encodeURIComponent(sys), '_blank');
+        });
+      }
+    }catch(e){}
+  });
+})();
+</script>
+
 </body>
 </html>
