@@ -280,8 +280,10 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 const url=new URL(location.href);
 const URL_SYS=(url.searchParams.get('sys')||'').toUpperCase();
 const BUILD_ID = "tvbrand20";
+const TVDEBUG = url.searchParams.get('debug')==='1';
 const URL_SEASON=(url.searchParams.get('season')||'');
 function forceSysSeasonFromUrl(){
+  let changed=false;
   try{
     if(!pub||!pub.systems) return;
     if(URL_SYS && systemSel){
@@ -289,6 +291,7 @@ function forceSysSeasonFromUrl(){
       if(ok && systemSel.value!==URL_SYS){
         systemSel.value=URL_SYS;
         systemSel.dispatchEvent(new Event('change'));
+        changed=true;
         if(typeof buildSeasonSelector==="function") buildSeasonSelector();
         if(typeof buildTournamentSelector==="function") buildTournamentSelector();
         if(typeof buildRoundSelector==="function") buildRoundSelector();
@@ -299,11 +302,13 @@ function forceSysSeasonFromUrl(){
       if(opt && seasonSel.value!==opt.value){
         seasonSel.value=opt.value;
         seasonSel.dispatchEvent(new Event('change'));
+        changed=true;
         if(typeof buildTournamentSelector==="function") buildTournamentSelector();
         if(typeof buildRoundSelector==="function") buildRoundSelector();
       }
     }
   }catch(e){}
+  return {urlSys:URL_SYS, uiSys:(systemSel?systemSel.value:''), hasUrlSys:!!(pub&&pub.systems&&pub.systems[URL_SYS]), changed};
 }
 
 const TV = url.searchParams.get("tv")==="1";
