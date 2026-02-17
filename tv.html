@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Liga Anzeige v4 (PKM / YGO / DT)</title>
+  <title>Liga TV Anzeige</title>
   <style>
     :root{--bg:#0b1220;--card:#121b2e;--text:#e8eefc;--muted:#a9b7da;--acc:#7aa2ff;}
     *{box-sizing:border-box}
@@ -300,7 +300,7 @@ function forceSysSeasonFromUrl(){
   }catch(e){}
 }
 
-const TV = url.searchParams.get("tv")==="1";
+const TV = true;
 if(TV) document.documentElement.classList.add("tv");
 if(TV){
   // TV: standardmäßig Paarungen anzeigen
