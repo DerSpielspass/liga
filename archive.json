@@ -1,3 +1,44 @@
 {
-  "seasons": []
+  "seasons": [
+    {
+      "id": "ef72954ebbb1519c673bd4cd",
+      "system": "PKM",
+      "name": "Februar 2026",
+      "createdAt": 1771258500301,
+      "endedAt": 1771260783163,
+      "type": "SWISS_SERIES",
+      "settings": {
+        "scoring": {
+          "win": 3,
+          "draw": 1,
+          "loss": 0
+        },
+        "attendanceBonus": false,
+        "seasonPoints": {
+          "base": 10,
+          "divisorN": 8,
+          "exponent": 0.5,
+          "rounding": 1
+        }
+      },
+      "roster": [],
+      "tournaments": [
+        {
+          "id": "eb5180fd5221a19c6747701e",
+          "name": "#1 – 2026-02-16",
+          "createdAt": 1771259260958,
+          "closedAt": null,
+          "status": "OPEN",
+          "players": [],
+          "rounds": [],
+          "seasonPointsByTeamId": {}
+        }
+      ],
+      "seasonPointsByTeamId": {},
+      "rr": {
+        "rounds": []
+      },
+      "activeTournamentId": "eb5180fd5221a19c6747701e"
+    }
+  ]
 }
