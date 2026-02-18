@@ -140,6 +140,7 @@
       <span class="pill" id="modePill">Modus: —</span>
     </div>
   </div>
+<div id="debugLine" class="muted" style="display:none; font-size:12px; margin-top:4px; opacity:.9;"></div>
 </header>
 
 <main>
@@ -279,10 +280,11 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const TVDEBUG = url.searchParams.get('debug')==='1';
-const BUILD_ID = "trinity-v4";
+const BUILD_ID = "tv-trinity-v6";
 const URL_SYS=(url.searchParams.get('sys')||'').toUpperCase();
 const URL_SEASON=(url.searchParams.get('season')||'');
 function forceSysSeasonFromUrl(){
+  let changed=false;
   try{
     if(!pub||!pub.systems) return;
     if(URL_SYS && systemSel){
@@ -290,6 +292,7 @@ function forceSysSeasonFromUrl(){
       if(ok && systemSel.value!==URL_SYS){
         systemSel.value=URL_SYS;
         systemSel.dispatchEvent(new Event('change'));
+        changed=true;
       }
     }
     if(URL_SEASON && seasonSel && seasonSel.options){
@@ -297,9 +300,11 @@ function forceSysSeasonFromUrl(){
       if(opt && seasonSel.value!==opt.value){
         seasonSel.value=opt.value;
         seasonSel.dispatchEvent(new Event('change'));
+        changed=true;
       }
     }
   }catch(e){}
+  return {urlSys:URL_SYS, uiSys:(systemSel?systemSel.value:''), hasUrlSys:!!(pub&&pub.systems&&pub.systems[URL_SYS]), changed};
 }
 
 const TV = true;
@@ -533,7 +538,22 @@ function computeStandings(players, matches, scoring){
   return arr;
 }
 
+function updateDebugLine(){
+  const el=document.getElementById('debugLine');
+  if(!el) return;
+  if(!TVDEBUG){ el.style.display='none'; return; }
+  let sys = (typeof activeSystem!=='undefined' && activeSystem) ? activeSystem : (URL_SYS||'');
+  let seasonName='';
+  try{ if(pub && pub.systems && sys && pub.systems[sys] && pub.systems[sys].activeSeasonName) seasonName = pub.systems[sys].activeSeasonName; }catch(e){}
+  let has = false;
+  try{ has = !!(pub && pub.systems && sys && pub.systems[sys]); }catch(e){}
+  el.style.display='block';
+  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||''} · activeSys=${sys||''} · has=${has} · season=${seasonName||''}`;
+}
+
 function renderCurrent(){
+  try{ updateDebugLine(); }catch(e){}
+
   const season = getSelectedSeason();
   const sys = systemSel.value || "PKM";
   if(!season){
