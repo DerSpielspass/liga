@@ -353,6 +353,19 @@ async function loadPublic(){
   renderCurrent();
   startTvRotate();
     subtitle.textContent = "Daten geladen.";
+  try{
+    const dbg=document.getElementById('debugLine');
+    if(dbg){
+      if(TVDEBUG){
+        const sysEl=document.getElementById('systemSel');
+        const uiSys=sysEl?sysEl.value:'';
+        dbg.style.display='block';
+        dbg.textContent='Debug · urlSys='+(URL_SYS||'')+' · uiSys='+(uiSys||'')+' · has='+(pub&&pub.systems&&URL_SYS&&pub.systems[URL_SYS]?'true':'false');
+      } else {
+        dbg.style.display='none';
+      }
+    }
+  }catch(e){}
     return true;
   }catch(err){
     setView("error");
@@ -632,10 +645,21 @@ function renderCurrent(){
     const r=(season.rounds||[]).find(x=>x.no===rno) || (season.rounds||[])[0] || null;
     if(r){
       setPrintHeader(`${sys} · ${season.name} · Spieltag ${r.no}`, `Stand: ${parseTime(pub.lastUpdated||"")}`);
-      roundList.innerHTML = r.matches.map(m=>{
+      roundList.innerHTML = r.matches.slice().sort((a,b)=>(a.tableNo??9999)-(b.tableNo??9999)).map(m=>{
         const score=(r.confirmed && m.aScore!==null && m.bScore!==null)?`${m.aScore} : ${m.bScore}`:"TBD";
         const show=r.confirmed?` <span class="muted">(${esc(score)})</span>`:` <span class="muted">(TBD)</span>`;
-        return `<div class="item"><div><b>Tisch ${m.tableNo ?? "—"} · ${esc(m.a.name)} – ${esc(m.b.name)}${show}</b><div class="meta">${m.note?esc(m.note):(r.confirmed?"Ergebnis veröffentlicht":"Ergebnis folgt nach Bestätigung")}</div></div></div>`;
+        const metaText = m.note?esc(m.note):(r.confirmed?"Ergebnis veröffentlicht":"Ergebnis folgt nach Rundenabschluss");
+        const bname = m.b ? m.b.name : "BYE";
+        return `
+          <div class="item">
+            <div class="tvMatchRow">
+              <div class="tvTable">${m.tableNo ?? "—"}</div>
+              <div class="tvVs">
+                <div>${esc(m.a.name)} <span class="muted">vs</span> ${esc(bname)}${show}</div>
+                <div class="meta">${metaText}</div>
+              </div>
+            </div>
+          </div>`;
       }).join("");
       const open=(season.rounds||[]).find(x=>!x.confirmed);
       fixtureList.innerHTML = open ? open.matches.map(m=>`<div class="item"><div><b>Spieltag ${open.no} · Tisch ${m.tableNo ?? "—"} · ${esc(m.a.name)} – ${esc(m.b.name)}</b><div class="meta">Offen</div></div></div>`).join("") : `<div class="muted">Kein offener Spieltag.</div>`;
