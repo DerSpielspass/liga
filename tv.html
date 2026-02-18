@@ -121,23 +121,8 @@
 #standingsBody tr:nth-child(3) td:first-child::before{ content:"🥉 "; }
 </style>
 
-
-<style>
-/* TV_FORCE_HIDE_CONTROLS */
-.tv #controls, 
-.tv .controls,
-.tv .topControls,
-.tv #filters,
-.tv .filterRow,
-.tv select,
-.tv button#printBtn,
-.tv .noTv,
-.tv .onlyLigaControls{
-  display:none !important;
-}
-</style>
 </head>
-<body class="tv">
+<body>
 <header class="noPrint">
   <div class="split">
     <div class="row" style="align-items:center;">
@@ -157,10 +142,6 @@
   </div>
 <div id="debugLine" class="muted" style="display:none; font-size:12px; margin-top:4px; opacity:.9;"></div>
 </header>
-<div id="tvSmartBanner" style="display:none; padding:10px 18px; margin:14px 22px 0; border-radius:16px; background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);">
-  <div id="tvSmartBannerTitle" style="font-weight:900; font-size:18px;"></div>
-  <div id="tvSmartBannerSub" class="muted" style="font-size:13px; margin-top:2px;"></div>
-</div>
 
 <main>
   <div class="card noPrint">
@@ -299,7 +280,7 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const TVDEBUG = url.searchParams.get('debug')==='1';
-const BUILD_ID = "tv-trinity-v10";
+const BUILD_ID = "tv-trinity-v6";
 const URL_SYS=(url.searchParams.get('sys')||'').toUpperCase();
 const URL_SEASON=(url.searchParams.get('season')||'');
 function forceSysSeasonFromUrl(){
@@ -335,31 +316,16 @@ if(TV){
 
 const TV_ROTATE_MS = 30000;
 let tvRotateTimer=null;
-let tvRotateModes=["round","table"];
-let tvRotateIndex=0;
-function setTvRotateModes(modes){
-  if(!TV) return;
-  tvRotateModes = (modes && modes.length) ? modes.slice() : ["table"];
-  tvRotateIndex = 0;
-  const first = tvRotateModes[0];
-  try{ if(viewSel) viewSel.value = first; }catch(e){}
-  try{ setView(first); }catch(e){}
-}
 function startTvRotate(){
   if(!TV) return;
   if(tvRotateTimer) return;
   tvRotateTimer=setInterval(()=>{
     try{
-      if(!tvRotateModes || tvRotateModes.length<=1) return;
-      tvRotateIndex = (tvRotateIndex + 1) % tvRotateModes.length;
-      const next = tvRotateModes[tvRotateIndex];
+      const cur = (viewSel && viewSel.value) ? viewSel.value : "round";
+      const next = (cur==="round") ? "table" : "round";
       if(viewSel) viewSel.value = next;
       setView(next);
     }catch(e){}
-  }, TV_ROTATE_MS);
-}
-
-catch(e){}
   }, TV_ROTATE_MS);
 }
 
@@ -582,58 +548,7 @@ function updateDebugLine(){
   let has = false;
   try{ has = !!(pub && pub.systems && sys && pub.systems[sys]); }catch(e){}
   el.style.display='block';
-  const uiSys = (systemSel && systemSel.value) ? systemSel.value : "";
-  let modeList="";
-  try{ modeList=(tvRotateModes||[]).join('>'); }catch(e){}
-  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||""} · uiSys=${uiSys||""} · has=${has} · rotate=${modeList}`;
-}
-
-function chooseSmartTvModes(season){
-  if(!TV) return;
-  const banner=document.getElementById('tvSmartBanner');
-  const bTitle=document.getElementById('tvSmartBannerTitle');
-  const bSub=document.getElementById('tvSmartBannerSub');
-  if(!season){
-    setTvRotateModes(['table']);
-    if(banner) banner.style.display='block';
-    if(bTitle) bTitle.textContent='Keine aktive Saison';
-    if(bSub) bSub.textContent='Bitte veröffentlichen (public.json) oder Saison wählen.';
-    return;
-  }
-  let hasOpen=false;
-  let finished=false;
-  let label='';
-  try{
-    if(season.type==='SWISS_SERIES'){
-      const ts=(season.tournaments||[]);
-      const t=ts.find(x=>x && x.id=== (tournamentSel? tournamentSel.value : '')) || ts[0];
-      if(t){
-        const tClosed = (t.status==='CLOSED');
-        const openR = (!tClosed) && t.roundOpen && t.roundOpen.status!=='CLOSED';
-        hasOpen = !!openR;
-        finished = tClosed;
-        if(finished) label='🏁 Turnier beendet – Endstand';
-      }
-    } else if(season.type==='RR'){
-      const rounds=(season.rounds||[]);
-      hasOpen = rounds.some(r=>!r.confirmed);
-      finished = rounds.length>0 && !hasOpen;
-      if(finished) label='🏁 Saison beendet – Endstand';
-    }
-  }catch(e){}
-  // ob Saisonpunkte-Ansicht existiert
-  let canSeasonPoints=false;
-  try{ canSeasonPoints = !!document.querySelector('option[value="seasonpoints"]'); }catch(e){}
-  if(hasOpen){
-    setTvRotateModes(['round','table']);
-    if(banner) banner.style.display='none';
-  } else {
-    if(canSeasonPoints) setTvRotateModes(['table','seasonpoints']);
-    else setTvRotateModes(['table']);
-    if(banner) banner.style.display='block';
-    if(bTitle) bTitle.textContent = label || 'Keine offene Runde';
-    if(bSub) bSub.textContent = canSeasonPoints ? 'Wechselt zwischen Endstand und Saisonübersicht.' : 'Zeigt den Endstand.';
-  }
+  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||''} · activeSys=${sys||''} · has=${has} · season=${seasonName||''}`;
 }
 
 function renderCurrent(){
