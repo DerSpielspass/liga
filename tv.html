@@ -121,8 +121,23 @@
 #standingsBody tr:nth-child(3) td:first-child::before{ content:"🥉 "; }
 </style>
 
+
+<style>
+/* TV_FORCE_HIDE_CONTROLS */
+.tv #controls, 
+.tv .controls,
+.tv .topControls,
+.tv #filters,
+.tv .filterRow,
+.tv select,
+.tv button#printBtn,
+.tv .noTv,
+.tv .onlyLigaControls{
+  display:none !important;
+}
+</style>
 </head>
-<body>
+<body class="tv">
 <header class="noPrint">
   <div class="split">
     <div class="row" style="align-items:center;">
@@ -284,7 +299,7 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const TVDEBUG = url.searchParams.get('debug')==='1';
-const BUILD_ID = "tv-trinity-v9";
+const BUILD_ID = "tv-trinity-v10";
 const URL_SYS=(url.searchParams.get('sys')||'').toUpperCase();
 const URL_SEASON=(url.searchParams.get('season')||'');
 function forceSysSeasonFromUrl(){
