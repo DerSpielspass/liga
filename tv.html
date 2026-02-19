@@ -366,19 +366,7 @@ async function loadPublic(){
   renderCurrent();
   startTvRotate();
     subtitle.textContent = "Daten geladen.";
-  try{
-    const dbg=document.getElementById('debugLine');
-    if(dbg){
-      if(TVDEBUG){
-        const sysEl=document.getElementById('systemSel');
-        const uiSys=sysEl?sysEl.value:'';
-        dbg.style.display='block';
-        dbg.textContent='Debug · urlSys='+(URL_SYS||'')+' · uiSys='+(uiSys||'')+' · has='+(pub&&pub.systems&&URL_SYS&&pub.systems[URL_SYS]?'true':'false');
-      } else {
-        dbg.style.display='none';
-      }
-    }
-  }catch(e){}
+    updateDebugLine();
     return true;
   }catch(err){
     setView("error");
