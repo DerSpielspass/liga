@@ -557,7 +557,7 @@ function updateDebugLine(){
   try{ has = !!(pub && pub.systems && sys && pub.systems[sys]); }catch(e){}
   el.style.display='block';
   let modeList=''; try{ modeList=(tvRotateModes||[]).join('>'); }catch(e){}
-  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||''} · uiSys=${(systemSel&&systemSel.value)||''} · has=${has} · rotate=${modeList}`;
+  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||''} · uiSys=${(systemSel&&systemSel.value)||''} · has=${has} · rotate=${modeList} Cora`;
 }
 
 function chooseSmartTvModes(season){
