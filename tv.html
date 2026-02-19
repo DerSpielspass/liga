@@ -284,7 +284,7 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const TVDEBUG = url.searchParams.get('debug')==='1';
-const BUILD_ID = "tv-trinity-v11-smart";
+const BUILD_ID = "tv-trinity-v12-smart";
 const URL_SYS=(url.searchParams.get('sys')||'').toUpperCase();
 const URL_SEASON=(url.searchParams.get('season')||'');
 function forceSysSeasonFromUrl(){
@@ -320,13 +320,14 @@ if(TV){
 
 const TV_ROTATE_MS = 30000;
 let tvRotateTimer=null;
-let tvRotateModes=["round","table"]; 
+let tvRotateModes=["round","table"];
 let tvRotateIndex=0;
 function setTvRotateModes(modes){
   if(!TV) return;
-  tvRotateModes = (modes && modes.length) ? modes.slice() : ["table"]; 
-  tvRotateIndex = 0;
-  try{ const first=tvRotateModes[0]||"table"; if(viewSel) viewSel.value = first; setView(first); }catch(e){}
+  tvRotateModes=(modes&&modes.length)?modes.slice():["table"];
+  tvRotateIndex=0;
+  try{ if(viewSel) viewSel.value=tvRotateModes[0]; }catch(e){}
+  try{ setView(tvRotateModes[0]); }catch(e){}
 }
 function startTvRotate(){
   if(!TV) return;
@@ -334,12 +335,21 @@ function startTvRotate(){
   tvRotateTimer=setInterval(()=>{
     try{
       if(!tvRotateModes || tvRotateModes.length<=1) return;
-      tvRotateIndex = (tvRotateIndex + 1) % tvRotateModes.length;
-      const next = tvRotateModes[tvRotateIndex];
-      if(viewSel) viewSel.value = next;
+      tvRotateIndex=(tvRotateIndex+1)%tvRotateModes.length;
+      const next=tvRotateModes[tvRotateIndex];
+      if(viewSel) viewSel.value=next;
       setView(next);
+      try{ updateDebugLine(); }catch(e){}
     }catch(e){}
   }, TV_ROTATE_MS);
+}
+catch(e){}
+  }, TV_ROTATE_MS);
+}
+
+if(TV){
+  // Im TV-Modus wollen wir standardmäßig Paarungen anzeigen.
+  try{ viewSel.value = "round"; }catch(e){}
 }
 
 modePill.textContent = "Modus: " + (TV ? "TV" : "Normal");
@@ -366,8 +376,7 @@ async function loadPublic(){
   renderCurrent();
   startTvRotate();
     subtitle.textContent = "Daten geladen.";
-    updateDebugLine();
-    return true;
+  return true;
   }catch(err){
     setView("error");
     $("errText").textContent = String(err);
@@ -485,6 +494,16 @@ function buildRoundSelector(){
     if(!roundSel.value && rounds[0]) roundSel.value = String(rounds[0].no);
   } else roundSel.innerHTML = `<option value="">(—)</option>`;
 }
+
+function getSwissOpenRound(t){
+  try{
+    if(!t) return null;
+    if(t.roundOpen && t.roundOpen.status !== "CLOSED") return t.roundOpen;
+    const rounds = (t.rounds||[]);
+    return rounds.find(r => r && r.status !== "CLOSED") || null;
+  }catch(e){ return null; }
+}
+
 function getSelectedSeason(){
   const sys = systemSel.value || "PKM";
   const sysData = systems()[sys] || {};
@@ -544,8 +563,10 @@ function updateDebugLine(){
   let has = false;
   try{ has = !!(pub && pub.systems && sys && pub.systems[sys]); }catch(e){}
   el.style.display='block';
-  let modeList=''; try{ modeList=(tvRotateModes||[]).join('>'); }catch(e){}
-  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||''} · uiSys=${(systemSel&&systemSel.value)||''} · has=${has} · rotate=${modeList}`;
+  const uiSys=(systemSel&&systemSel.value)||'';
+  let has=false; try{ has=!!(pub&&pub.systems&&uiSys&&pub.systems[uiSys]); }catch(e){}
+  let modeList=''; try{ modeList=(typeof tvRotateModes!=='undefined' && tvRotateModes ? tvRotateModes : []).join('>'); }catch(e){}
+  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||''} · uiSys=${uiSys||''} · has=${has} · rotate=${modeList}`;
 }
 
 function chooseSmartTvModes(season){
@@ -554,51 +575,42 @@ function chooseSmartTvModes(season){
   const bTitle=document.getElementById('tvSmartBannerTitle');
   const bSub=document.getElementById('tvSmartBannerSub');
   let hasOpen=false;
-  let finished=false;
-  let label='';
-  let sub='';
+  let finishedLabel='';
+  let canSeasonPoints=false;
+  try{ const opt=document.querySelector('option[value="seasonpoints"]'); canSeasonPoints=!!(opt && !opt.disabled); }catch(e){}
   try{
     if(!season){
       setTvRotateModes(['table']);
-      label='Keine Saison'; sub='Bitte Saison wählen und veröffentlichen.';
-    } else if(season.type==='SWISS_SERIES'){
-      const t = getSelectedTournament(season);
-      if(t){
-        const tClosed = (t.status==='CLOSED');
-        const openR = (!tClosed) && t.roundOpen && t.roundOpen.status!=='CLOSED';
-        hasOpen = !!openR;
-        finished = tClosed;
-      }
-      if(hasOpen){ setTvRotateModes(['round','table']); }
-      else {
-        // Kein offenes Match: Endstand & Saisonübersicht
-        setTvRotateModes(['table','seasonpoints']);
-        label = finished ? '🏁 Turnier beendet – Endstand' : 'Keine offene Runde';
-        sub = 'Wechselt zwischen Endstand und Saisonübersicht.';
-      }
+      if(banner) banner.style.display='block';
+      if(bTitle) bTitle.textContent='Keine aktive Saison';
+      if(bSub) bSub.textContent='Bitte Saison wählen und veröffentlichen.';
+      return;
+    }
+    if(season.type==='SWISS_SERIES'){
+      const t=(season.tournaments||[])[0];
+      const openR=getSwissOpenRound(t);
+      const tClosed = (t && t.status==='CLOSED');
+      hasOpen = (!!openR) && !tClosed;
+      if(tClosed) finishedLabel='🏁 Turnier beendet – Endstand';
     } else if(season.type==='RR'){
       const rounds=(season.rounds||[]);
       hasOpen = rounds.some(r=>!r.confirmed);
-      finished = rounds.length>0 && !hasOpen;
-      if(hasOpen){ setTvRotateModes(['round','table']); }
-      else {
-        setTvRotateModes(['table']);
-        label = finished ? '🏁 Saison beendet – Endstand' : 'Keine offene Runde';
-        sub = 'Zeigt den Endstand.';
-      }
-    } else {
-      setTvRotateModes(['table']);
+      if(rounds.length>0 && !hasOpen) finishedLabel='🏁 Saison beendet – Endstand';
     }
-  }catch(e){ setTvRotateModes(['table']); }
-  try{
-    if(label){ if(banner) banner.style.display='block'; if(bTitle) bTitle.textContent=label; if(bSub) bSub.textContent=sub||''; }
-    else { if(banner) banner.style.display='none'; }
   }catch(e){}
+  if(hasOpen){
+    setTvRotateModes(['round','table']);
+    if(banner) banner.style.display='none';
+  } else {
+    if(canSeasonPoints) setTvRotateModes(['table','seasonpoints']); else setTvRotateModes(['table']);
+    if(banner) banner.style.display='block';
+    if(bTitle) bTitle.textContent=finishedLabel || 'Keine offene Runde';
+    if(bSub) bSub.textContent=canSeasonPoints ? 'Wechselt zwischen Endstand und Saisonübersicht.' : 'Zeigt den Endstand.';
+  }
 }
 
 function renderCurrent(){
-  try { updateDebugLine(); }
-  catch(e) { if (TVDEBUG) console.error("updateDebugLine failed:", e); }
+  try{ updateDebugLine(); }catch(e){}
 
   const season = getSelectedSeason();
   const sys = systemSel.value || "PKM";
