@@ -609,7 +609,8 @@ function chooseSmartTvModes(season){
 }
 
 function renderCurrent(){
-  try{ updateDebugLine(); }catch(e){}
+  try { updateDebugLine(); }
+  catch(e) { if (TVDEBUG) console.error("updateDebugLine failed:", e); }
 
   const season = getSelectedSeason();
   const sys = systemSel.value || "PKM";
