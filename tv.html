@@ -54,9 +54,9 @@
 .ctxTag{display:inline-block;margin-left:10px;padding:6px 10px;border-radius:999px;font-size:14px;font-weight:700;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);vertical-align:middle}
 
     /* TV_HIDE_CONTROLS */
-    body.tv .noPrint{display:none !important;}
-    body.tv #controls{display:none !important;}
-</style>
+    html.tv main .card.noPrint{display:none!important;}
+html.tv header.noPrint{display:flex!important;}
+    </style>
 
 <style>
 /* === Der Spielspass TV-Design === */
@@ -317,6 +317,7 @@ function forceSysSeasonFromUrl(){
 
 const TV = true;
 if(TV) document.documentElement.classList.add("tv");
+    try{document.body && document.body.classList.add("tv");}catch(e){}
 if(TV){
   // TV: standardmäßig Paarungen anzeigen
   try{ viewSel.value = "round"; }catch(e){}
