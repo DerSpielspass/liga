@@ -411,8 +411,6 @@ function buildSelectors(){
   }
 
   const season = getSelectedSeason();
-    try{ chooseSmartTvModes(season); }catch(e){}
-
   if(season && season.type==="SWISS_SERIES"){
     tournamentWrap.classList.remove("hide");
     viewSel.querySelector('option[value="seasonpoints"]').disabled = false;
@@ -433,98 +431,59 @@ function buildSelectors(){
 }
 
 function chooseTvTournamentAndRound(season){
-  if(!TV) return;
-  try{
-    if(!season) return;
-
-    if(season.type==="SWISS_SERIES"){
-      const list = (season.tournaments||[]);
-      if(!list.length) return;
-
-      // 1) Turnier wählen: bevorzugt OFFEN, sonst das letzte
-      let pick = list.find(x=>String(x.status||'').toUpperCase()!=="CLOSED");
-      if(!pick) pick = list[list.length-1];
-
-      if(tournamentSel && pick && pick.id){
-        tournamentSel.value = String(pick.id);
-      }
-
-      // 2) Runden-Select neu aufbauen und offene Runde wählen (falls vorhanden)
-      buildRoundSelector();
-      const t = getSelectedTournament(season);
-      if(!t) return;
-
-      const rounds = []
-        .concat(t.roundsClosed||[])
-        .concat(t.roundOpen ? [t.roundOpen] : []);
-      const sorted = rounds.slice().sort((a,b)=>(a.no||0)-(b.no||0));
-
-      let openR = sorted.find(r=>String(r.status||'').toUpperCase()!=="CLOSED");
-      let want = openR ? openR.no : (sorted.length ? sorted[sorted.length-1].no : '');
-      if(roundSel && want!=='' && want!==null && typeof want!=='undefined'){
-        roundSel.value = String(want);
+  if(!TV || !season) return;
+  if(season.type==="SWISS_SERIES"){
+    const ts = (season.tournaments||[]);
+    if(!ts.length) return;
+    // bevorzugt ein Turnier mit offener Runde, sonst das neueste
+    let t = ts.find(x=>x.roundOpen) || ts[0];
+    if(tournamentSel && t){ tournamentSel.value = t.id; }
+    // bevorzugt offene Runde, sonst höchste vorhandene
+    if(roundSel){
+      const rounds = [].concat(t.roundsClosed||[]).concat(t.roundOpen?[t.roundOpen]:[]);
+      const openR = rounds.find(x=>x.status!=="CLOSED");
+      if(openR) roundSel.value = String(openR.no);
+      else if(rounds.length){
+        const maxNo = Math.max(...rounds.map(r=>r.no));
+        roundSel.value = String(maxNo);
       }
     }
-
-    if(season.type==="RR"){
-      buildRoundSelector();
-      const rounds = (season.rounds||[]).slice().sort((a,b)=>(a.no||0)-(b.no||0));
-      if(!roundSel || !rounds.length) return;
-
-      // bevorzugt den nächsten offenen Spieltag, sonst den letzten
-      let openR = rounds.find(r=>!r.confirmed);
-      let want = openR ? openR.no : rounds[rounds.length-1].no;
-      roundSel.value = String(want);
-    }
-  }catch(e){}
+    // TV: nach dem Befüllen nochmal offene Runde erzwingen
+    try{ chooseTvTournamentAndRound(season); }catch(e){}
+  } else if(season.type==="RR"){
+    const rounds = (season.rounds||[]);
+    if(!rounds.length) return;
+    const open = rounds.find(r=>!r.confirmed) || rounds[0];
+    if(roundSel && open) roundSel.value = String(open.no);
+  }
 }
 
 function buildRoundSelector(){
   const season = getSelectedSeason();
   if(!season){ roundSel.innerHTML = `<option value="">(—)</option>`; return; }
-
   if(season.type==="SWISS_SERIES"){
     const t = getSelectedTournament(season);
     if(!t){ roundSel.innerHTML=`<option value="">(—)</option>`; return; }
-
-    const rounds = []
-      .concat(t.roundsClosed||[])
-      .concat(t.roundOpen ? [t.roundOpen] : []);
-    const sorted = rounds.slice().sort((a,b)=>(a.no||0)-(b.no||0));
-
-    roundSel.innerHTML = sorted.length
-      ? sorted.map(r=>`<option value="${r.no}">Runde ${r.no}${String(r.status||'').toUpperCase()==="CLOSED"?" ✓":""}</option>`).join("")
-      : `<option value="">(keine Runde)</option>`;
-
-    if(sorted.length){
-      if(TV){
-        const openR = sorted.find(r=>String(r.status||'').toUpperCase()!=="CLOSED");
-        roundSel.value = String((openR ? openR.no : sorted[sorted.length-1].no));
-      } else {
-        if(!roundSel.value) roundSel.value = String(sorted[0].no);
-      }
+    const rounds = [].concat(t.roundsClosed||[]).concat(t.roundOpen?[t.roundOpen]:[]);
+    const sorted = rounds.slice().sort((a,b)=>a.no-b.no);
+    // TV: bevorzugt offene Runde, damit Paarungen sichtbar sind
+    if(TV){
+      const openR = sorted.find(x=>x.status!=="CLOSED");
+      if(openR) roundSel.value = String(openR.no);
     }
-    return;
-  }
-
-  if(season.type==="RR"){
-    const rounds = (season.rounds||[]).slice().sort((a,b)=>(a.no||0)-(b.no||0));
+    roundSel.innerHTML = sorted.length
+      ? sorted.map(r=>`<option value="${r.no}">Runde ${r.no}${r.status==="CLOSED"?" ✓":""}</option>`).join("")
+      : `<option value="">(keine Runde)</option>`;
+    if(!roundSel.value && sorted[0]) roundSel.value = String(sorted[0].no);
+    // TV: nach dem Befüllen nochmal offene Runde erzwingen
+    try{ chooseTvTournamentAndRound(season); }catch(e){}
+  } else if(season.type==="RR"){
+    const rounds = (season.rounds||[]).slice().sort((a,b)=>a.no-b.no);
     roundSel.innerHTML = rounds.length
       ? rounds.map(r=>`<option value="${r.no}">Spieltag ${r.no}${r.confirmed?" ✓":""}</option>`).join("")
       : `<option value="">(kein Spielplan)</option>`;
-
-    if(rounds.length){
-      if(TV){
-        const openR = rounds.find(r=>!r.confirmed);
-        roundSel.value = String((openR ? openR.no : rounds[rounds.length-1].no));
-      } else {
-        if(!roundSel.value) roundSel.value = String(rounds[0].no);
-      }
-    }
-    return;
-  }
-
-  roundSel.innerHTML = `<option value="">(—)</option>`;
+    if(!roundSel.value && rounds[0]) roundSel.value = String(rounds[0].no);
+  } else roundSel.innerHTML = `<option value="">(—)</option>`;
 }
 function getSelectedSeason(){
   const sys = systemSel.value || "PKM";
@@ -586,88 +545,119 @@ function updateDebugLine(){
   try{ has = !!(pub && pub.systems && sys && pub.systems[sys]); }catch(e){}
   el.style.display='block';
   let modeList=''; try{ modeList=(tvRotateModes||[]).join('>'); }catch(e){}
-  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||''} · uiSys=${(systemSel&&systemSel.value)||''} · has=${has} · rotate=${modeList}`;
+  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||''} · uiSys=${(systemSel&&systemSel.value)||''} · has=${has} · rotate=${modeList} · state=${(window.__TV_STATE__||'')}`;
 }
 
 function chooseSmartTvModes(season){
+  // Smart-TV entscheidet, welche Views im TV rotieren sollen.
+  // Views: fixtures (Paarungen ohne Ergebnis), results (Paarungen mit Ergebnis),
+  //        table (Tabelle), seasonpoints (Saisonpunkte)
   if(!TV) return;
 
-  const banner=document.getElementById('tvSmartBanner');
-  const bTitle=document.getElementById('tvSmartBannerTitle');
-  const bSub=document.getElementById('tvSmartBannerSub');
+  const banner = document.getElementById('tvSmartBanner');
+  const bTitle = document.getElementById('tvSmartBannerTitle');
+  const bSub   = document.getElementById('tvSmartBannerSub');
 
-  let label='';
-  let sub='';
+  let label = '';
+  let sub   = '';
+  let tvState = 'UNKNOWN';
+
   try{
-    // Default
-    setTvRotateModes(['table']);
-
+    // 0) Keine Saison
     if(!season){
-      label='Keine Saison';
-      sub='Bitte Saison wählen und veröffentlichen.';
-    } else if(season.type === "SWISS_SERIES"){
+      tvState = 'NO_SEASON';
+      setTvRotateModes(['table']);
+      label = 'Keine Saison';
+      sub   = 'Bitte Saison wählen und veröffentlichen.';
+    }
+
+    // 1) Swiss-Serie (PKM/YGO)
+    else if(season.type === 'SWISS_SERIES'){
       const t = getSelectedTournament(season);
 
+      // Defensive: falls Turnier fehlt
       if(!t){
-        label='Kein Turnier';
-        sub='Bitte Turnier starten und veröffentlichen.';
+        tvState = 'NO_TOURNAMENT';
         setTvRotateModes(['table']);
-      } else {
-        const tStatus = String(t.status||'').toUpperCase();
-        const hasOpenRound = !!(t.roundOpen && String(t.roundOpen.status||'').toUpperCase()!=="CLOSED");
-
-        if(tStatus === "CLOSED" || tStatus === "FINISHED"){
-          // Turnier abgeschlossen: Endstand + Saisonpunkte
-          setTvRotateModes(['table','seasonpoints']);
-          label='🏁 Turnier beendet';
-          sub='Wechselt zwischen Endstand und Saisonpunkten.';
-        } else if(hasOpenRound){
-          // Offene Runde: Paarungen + Tabelle
-          setTvRotateModes(['round','table']);
-          label=''; sub='';
-        } else {
-          // Turnier offen, aber keine offene Runde (selten, aber abfangen)
-          setTvRotateModes(['table']);
-          label='Keine offene Runde';
-          sub='Bitte nächste Runde generieren und veröffentlichen.';
-        }
+        label = 'Kein Turnier';
+        sub   = 'Bitte Turnier wählen/erstellen und veröffentlichen.';
       }
-    } else if(season.type === "RR"){
-      const rounds=(season.rounds||[]);
-      const hasOpen = rounds.some(r=>!r.confirmed);
 
-      if(hasOpen){
-        // Aktueller Spieltag (offen) + Tabelle
+      // Turnier abgeschlossen -> Endstand + Saisonpunkte
+      else if(t.status === 'CLOSED'){
+        tvState = 'TOURNAMENT_CLOSED';
+        setTvRotateModes(['table','seasonpoints']);
+        label = '🏁 Turnier beendet';
+        sub   = 'Wechsel zwischen Endstand und Saisonpunkten.';
+      }
+
+      // Runde offen -> Paarungen (ohne Ergebnis) + Tabelle
+      else if(t.roundOpen){
+        tvState = 'ROUND_OPEN';
+        setTvRotateModes(['fixtures','table']);
+        // Kein Banner nötig – das ist der Normalzustand im Laden
+      }
+
+      // Turnier offen, aber keine offene Runde (kommt selten vor, aber wir fangen es ab)
+      // -> Letzte Runde (mit Ergebnis) + Tabelle
+      else {
+        tvState = 'ROUND_CLOSED_WAITING_NEXT';
+        setTvRotateModes(['results','table']);
+        label = 'Runde abgeschlossen';
+        sub   = 'Warte auf nächste Runde / Veröffentlichung.';
+      }
+    }
+
+    // 2) Round Robin (DT) – ein Spieletag = eine Runde
+    else if(season.type === 'RR'){
+      const rounds = (season.rounds||[]);
+      const hasOpen = rounds.some(r => !r.confirmed);
+      const finished = rounds.length>0 && !hasOpen;
+
+      if(finished){
+        tvState = 'SEASON_FINISHED';
+        setTvRotateModes(['table']); // DT hat keine separaten Saisonpunkte
+        label = '🏁 Saison beendet';
+        sub   = 'Zeigt den Endstand.';
+      } else if(hasOpen){
+        tvState = 'RR_OPEN';
+        // Wir zeigen den aktuellen Spieletag (Paarungen) + Tabelle im Wechsel
         setTvRotateModes(['round','table']);
-        label=''; sub='';
-      } else if(rounds.length){
-        // Alle Spieltage bestätigt = Saison beendet
-        setTvRotateModes(['table']);
-        label='🏁 Saison beendet – Endstand';
-        sub='Zeigt die finalen Saisonpunkte.';
       } else {
+        tvState = 'RR_EMPTY';
         setTvRotateModes(['table']);
-        label='Kein Spielplan';
-        sub='Bitte Spieltage anlegen und veröffentlichen.';
+        label = 'Keine Runde';
+        sub   = 'Bitte Spieletage anlegen und veröffentlichen.';
       }
-    } else {
+    }
+
+    // 3) Fallback
+    else {
+      tvState = 'UNKNOWN_TYPE';
       setTvRotateModes(['table']);
     }
+
+    // Optional: tvState für Debug weiterreichen
+    try{ window.__TV_STATE__ = tvState; }catch(e){}
+
   }catch(e){
-    try{ setTvRotateModes(['table']); }catch(_){}
+    setTvRotateModes(['table']);
   }
 
-  // Banner rendern
+  // Banner (Hinweise) anzeigen/verstecken
   try{
     if(label){
-      if(banner) banner.style.display='block';
-      if(bTitle) bTitle.textContent=label;
-      if(bSub) bSub.textContent=sub||'';
+      if(banner) banner.style.display = 'block';
+      if(bTitle) bTitle.textContent = label;
+      if(bSub)   bSub.textContent   = sub || '';
     } else {
-      if(banner) banner.style.display='none';
+      if(banner) banner.style.display = 'none';
     }
   }catch(e){}
 }
+
+
+
 function renderCurrent(){
   try{ updateDebugLine(); }catch(e){}
 
