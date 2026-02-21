@@ -52,6 +52,10 @@
     .tv .item b{font-size:16px}
   
 .ctxTag{display:inline-block;margin-left:10px;padding:6px 10px;border-radius:999px;font-size:14px;font-weight:700;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);vertical-align:middle}
+
+    /* TV_HIDE_CONTROLS */
+    body.tv .noPrint{display:none !important;}
+    body.tv #controls{display:none !important;}
 </style>
 
 <style>
@@ -122,7 +126,7 @@
 </style>
 
 </head>
-<body>
+<body class="tv">
 <header class="noPrint">
   <div class="split">
     <div class="row" style="align-items:center;">
@@ -284,7 +288,7 @@ const FALLBACK_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSU
 
 const url=new URL(location.href);
 const TVDEBUG = url.searchParams.get('debug')==='1';
-const BUILD_ID = "tv-trinity-v11-smart";
+const BUILD_ID = "tv-trinity-v11-smart2";
 const URL_SYS=(url.searchParams.get('sys')||'').toUpperCase();
 const URL_SEASON=(url.searchParams.get('season')||'');
 function forceSysSeasonFromUrl(){
@@ -367,6 +371,7 @@ async function loadPublic(){
   startTvRotate();
     subtitle.textContent = "Daten geladen.";
   updateDebugLine();
+  }catch(e){}
     return true;
   }catch(err){
     setView("error");
@@ -545,110 +550,156 @@ function updateDebugLine(){
   try{ has = !!(pub && pub.systems && sys && pub.systems[sys]); }catch(e){}
   el.style.display='block';
   let modeList=''; try{ modeList=(tvRotateModes||[]).join('>'); }catch(e){}
-  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||''} · uiSys=${(systemSel&&systemSel.value)||''} · has=${has} · rotate=${modeList}`;
+  const state = (typeof window!=='undefined' && window.__TV_STATE) ? window.__TV_STATE : '';
+  el.textContent = `Debug · build=${BUILD_ID} · urlSys=${URL_SYS||''} · uiSys=${(systemSel&&systemSel.value)||''} · has=${has} · rotate=${modeList}${state?(' · state='+state):''}`;
 }
 
 function chooseSmartTvModes(season){
+  // TV-only guard (harmless even in tv.html)
   if(!TV) return;
 
-  const banner = document.getElementById('tvSmartBanner');
-  const bTitle = document.getElementById('tvSmartBannerTitle');
-  const bSub   = document.getElementById('tvSmartBannerSub');
+  const banner=document.getElementById('tvSmartBanner');
+  const bTitle=document.getElementById('tvSmartBannerTitle');
+  const bSub=document.getElementById('tvSmartBannerSub');
 
-  let label = '';
-  let sub   = '';
-  let tvState = 'UNKNOWN';
+  // default: no banner
+  let label='';
+  let sub='';
+  let tvState='UNKNOWN';
 
-  // helper: banner render
-  function showBanner(title, subtitle){
-    label = title || '';
-    sub   = subtitle || '';
+  // helper: is seasonpoints view available?
+  let canSeasonPoints=false;
+  try{
+    const opt=document.querySelector('option[value="seasonpoints"]');
+    canSeasonPoints=!!(opt && !opt.disabled);
+  }catch(e){}
+
+  // helper: find "current" RR spieltag = first unconfirmed
+  function getRrCurrentRound(rrSeason){
+    try{
+      const rounds=(rrSeason?.rounds||[]).slice().sort((a,b)=>(a.no||0)-(b.no||0));
+      return rounds.find(r=>!r.confirmed) || null;
+    }catch(e){ return null; }
+  }
+
+  // helper: find open swiss round (fallback-safe)
+  function getSwissOpenRound(t){
+    try{
+      if(!t) return null;
+      // Prefer explicit roundOpen if it is actually not closed
+      if(t.roundOpen && t.roundOpen.status !== "CLOSED") return t.roundOpen;
+      const rounds=(t.rounds||[]);
+      return rounds.find(r => r && r.status !== "CLOSED") || null;
+    }catch(e){ return null; }
   }
 
   try{
-    // 0) Keine Saison
+    // 0) no season
     if(!season){
-      tvState = 'NO_SEASON';
+      tvState='NO_SEASON';
       setTvRotateModes(['table']);
-      showBanner('Keine Saison', 'Bitte Saison wählen und veröffentlichen.');
+      label='Keine Saison';
+      sub='Bitte Saison wählen und veröffentlichen.';
     }
 
-    // 1) SWISS
-    else if(season.type === 'SWISS_SERIES'){
-      const t = getSelectedTournament ? getSelectedTournament(season) : null;
+    // 1) SWISS SERIES
+    else if(season.type==="SWISS_SERIES"){
+      const t = (typeof getSelectedTournament==="function") ? getSelectedTournament(season) : null;
 
       if(!t){
-        tvState = 'NO_TOURNAMENT';
+        tvState='NO_TOURNAMENT';
         setTvRotateModes(['table']);
-        showBanner('Kein Turnier', 'Bitte ein Turnier auswählen oder veröffentlichen.');
-      } else if(t.status === 'CLOSED'){
-        tvState = 'TOURNAMENT_CLOSED';
-        setTvRotateModes(['table','seasonpoints']);
-        showBanner('🏁 Turnier beendet – Endstand', 'Wechselt zwischen Endstand und Saisonpunkten.');
+        label='Kein Turnier';
+        sub='Bitte Turnier auswählen oder veröffentlichen.';
+      } else if(t.status==="CLOSED"){
+        tvState='TOURNAMENT_CLOSED';
+        if(canSeasonPoints) setTvRotateModes(['table','seasonpoints']);
+        else setTvRotateModes(['table']);
+        label='🏁 Turnier beendet – Endstand';
+        sub=canSeasonPoints ? 'Wechselt zwischen Turnierergebnis und Saisonpunkten.' : 'Zeigt den Endstand.';
       } else {
-        // Turnier offen
-        const openR = (typeof getSwissOpenRound === 'function') ? getSwissOpenRound(t) : (t.roundOpen || null);
-
-        if(openR){
-          tvState = 'ROUND_OPEN';
-          setTvRotateModes(['round','table']);
-          // optional: kein Banner, weil alles normal
-        } else {
-          tvState = 'ROUND_CLOSED';
-          setTvRotateModes(['round','table']); // zeigt dann Pairings mit Ergebnissen oder ggf. letzte Runde
-          showBanner('Keine offene Runde', 'Alle Paarungen eingetragen? Du kannst das Turnier beenden.');
+        // Turnier offen: immer Round↔Table (egal ob Runde offen oder schon komplett eingetragen)
+        const openR=getSwissOpenRound(t);
+        tvState = openR ? 'ROUND_OPEN' : 'ROUND_CLOSED';
+        setTvRotateModes(['round','table']);
+        // Optional Hinweis, falls wirklich keine Runde erkannt wird
+        if(!openR){
+          label='Keine offene Runde';
+          sub='Wenn du gerade abgeschlossen hast: nächste Runde anlegen & veröffentlichen.';
         }
       }
     }
 
-    // 2) ROUND ROBIN (vorläufig sinnvoll, später verfeinern)
-    else if(season.type === 'RR'){
-      const rounds = (season.rounds || []);
-      if(rounds.length === 0){
-        tvState = 'NO_ROUNDS';
+    // 2) ROUND ROBIN
+    else if(season.type==="RR"){
+      const cur=getRrCurrentRound(season);
+
+      if(!((season.rounds||[]).length)){
+        tvState='NO_RR_ROUNDS';
         setTvRotateModes(['table']);
-        showBanner('Noch keine Spieltage', 'Bitte Spieltage anlegen und veröffentlichen.');
+        label='Noch keine Spieltage';
+        sub='Bitte Spieltage anlegen und veröffentlichen.';
+      } else if(cur){
+        // Season running: show current spieltag (first unconfirmed), rotate round↔table
+        tvState='RR_DAY_OPEN';
+        setTvRotateModes(['round','table']);
+        label=`Round Robin läuft`;
+        sub=`Aktueller Spieltag: ${cur.no}`;
+        // Ensure round selector points at current spieltag
+        try{ if(roundSel) roundSel.value=String(cur.no); }catch(e){}
       } else {
-        const hasOpen = rounds.some(r => !r.confirmed);
-        if(hasOpen){
-          tvState = 'ROUND_OPEN';
-          setTvRotateModes(['round','table']);
-        } else {
-          tvState = 'SEASON_CLOSED';
-          setTvRotateModes(['seasonpoints']); // dein Wunsch: Saison abgeschlossen -> Saisonpunkte
-          showBanner('🏁 Saison beendet', 'Anzeige der Saisonpunkte.');
-        }
+        // all confirmed => season finished => show season points only
+        tvState='RR_SEASON_CLOSED';
+        if(canSeasonPoints) setTvRotateModes(['seasonpoints']);
+        else setTvRotateModes(['table']);
+        label='🏁 Saison beendet';
+        sub=canSeasonPoints ? 'Anzeige der Saisonpunkte.' : 'Saisonpunkte nicht verfügbar – zeige Tabelle.';
       }
     }
 
-    // 3) Unbekannter Typ
+    // 3) unknown season type
     else {
-      tvState = 'UNKNOWN_TYPE';
+      tvState='UNKNOWN_TYPE';
       setTvRotateModes(['table']);
-      showBanner('Unbekannter Modus', 'Diese Saisonart kann TV nicht darstellen.');
+      label='Unbekannter Modus';
+      sub='Diese Saisonart kann TV nicht darstellen.';
     }
 
   }catch(e){
-    // Fallback, aber mit Hinweis, damit du nicht im Dunkeln tappst:
+    // Safe fallback
+    tvState='ERROR';
     setTvRotateModes(['table']);
-    showBanner('TV-Fehler', 'Details siehe Konsole (debug=1).');
-    // Wenn du willst: console.error(e);
+    label='TV-Fehler';
+    sub='Details siehe Konsole (debug=1).';
   }
 
-  // Banner anzeigen / verstecken
+  // Apply banner
   try{
     if(label){
       if(banner) banner.style.display='block';
-      if(bTitle) bTitle.textContent = label;
-      if(bSub)   bSub.textContent   = sub;
+      if(bTitle) bTitle.textContent=label;
+      if(bSub) bSub.textContent=sub||'';
     } else {
       if(banner) banner.style.display='none';
     }
   }catch(e){}
 
-  // Optional für Debug: Zustand sichtbar machen
-  // (wenn du willst, kann updateDebugLine tvState ausgeben)
+  // If current view is not allowed by rotate modes, nudge to first mode
+  try{
+    if(TV){
+      const cur=viewSel?.value||'';
+      if(tvRotateModes && tvRotateModes.length && cur && !tvRotateModes.includes(cur)){
+        viewSel.value=tvRotateModes[0];
+        setView(tvRotateModes[0]);
+      }
+    }
+  }catch(e){}
+
+  // Debug: expose state (optional)
+  try{ window.__TV_STATE = tvState; }catch(e){}
 }
+
+
 function renderCurrent(){
   try{ updateDebugLine(); }catch(e){}
 
