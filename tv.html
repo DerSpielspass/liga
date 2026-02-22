@@ -659,11 +659,11 @@ function chooseSmartTvModes(season){
 
 
 function renderCurrent(){
-  try{ if(TV) chooseSmartTvModes(season); }catch(e){}
-  try{ updateDebugLine(); }catch(e){}
 
   const season = getSelectedSeason();
   const sys = systemSel.value || "PKM";
+  try{ chooseSmartTvModes(season); }catch(e){}
+  try{ updateDebugLine(); }catch(e){}
   if(!season){
     subtitle.textContent="Keine Saison.";
     standingsBody.innerHTML = `<tr><td colspan="9" class="muted">Keine Daten.</td></tr>`;
