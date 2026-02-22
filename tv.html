@@ -659,6 +659,7 @@ function chooseSmartTvModes(season){
 
 
 function renderCurrent(){
+  try{ if(TV) chooseSmartTvModes(season); }catch(e){}
   try{ updateDebugLine(); }catch(e){}
 
   const season = getSelectedSeason();
